@@ -653,7 +653,7 @@ interface TextNode extends DefaultShapeMixin, ConstraintMixin {
   autoRename: boolean
 
   textStyleId: string | PluginAPI['mixed']
-  fontSize: number | PluginAPI['mixed']
+  fontSize: number 
   fontName: FontName | PluginAPI['mixed']
   textCase: TextCase | PluginAPI['mixed']
   textDecoration: TextDecoration | PluginAPI['mixed']
