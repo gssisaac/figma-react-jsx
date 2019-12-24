@@ -35,7 +35,7 @@ function styledComponent(node) {
     text += `const ${node.name} = styled.${tag}` + "`\n";
     text += `  width: ${node.width};\n`;
     text += `  height: ${node.height};\n`;
-    if (node.type === 'TEXT' || node.type === 'FRAME') {
+    if (node.type === 'TEXT') {
         const fills = (node.fills);
         if (fills.length > 0) {
             fills.forEach(fill => {
@@ -44,6 +44,8 @@ function styledComponent(node) {
                 }
             });
         }
+    }
+    if (node.type === 'TEXT' || node.type === 'FRAME') {
         // Stroke color
         if (node.strokes.length > 0) {
             node.strokes.forEach(stroke => {
@@ -52,13 +54,30 @@ function styledComponent(node) {
                 }
             });
         }
-        //radius
-        //border-radius: 5px;
-        node.effects.forEach(effect => {
-            text += `  border-radius: ${effect.radius}px;\n`;
-        });
     }
     if (node.type === 'FRAME') {
+        // background
+        const fills = (node.fills);
+        if (fills.length > 0) {
+            fills.forEach(fill => {
+                if (fill.type === 'SOLID') {
+                    text += `  background: ${rgbToHex(fill.color)};\n`;
+                }
+            });
+        }
+        //radius
+        //border-radius: 5px;
+        if (typeof (node.cornerRadius) === 'number') {
+            text += `  border-radius: ${node.cornerRadius}px;\n`;
+        }
+        else {
+            if (node.topLeftRadius
+                && node.topRightRadius
+                && node.bottomRightRadius
+                && node.bottomLeftRadius) {
+                text += `  border-radius: ${node.topLeftRadius}px ${node.topRightRadius}px ${node.bottomRightRadius}px ${node.bottomLeftRadius}px;\n`;
+            }
+        }
         // add padding
         if (node.verticalPadding) {
             text += `  padding-top: ${node.verticalPadding};\n`;
@@ -219,4 +238,4 @@ console.log(totalText);
 // document.body.removeChild(copytexts)
 // Make sure to close the plugin when you're done. Otherwise the plugin will
 // keep running, which shows the cancel button at the bottom of the screen.
-figma.closePlugin();
+// figma.closePlugin();
