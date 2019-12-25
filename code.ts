@@ -27,6 +27,23 @@ function rgbToHex(color) {
   return "#" + componentToHex(color.r) + componentToHex(color.g) + componentToHex(color.b);
 }
 
+function getFillColor(node: FrameNode | TextNode | ComponentNode | VectorNode) {
+  let color = null
+  const fills = <Paint[]>(node.fills)
+  if (fills.length > 0) {
+    fills.forEach(fill => {
+      if (fill.type === 'SOLID') {
+        color = rgbToHex(fill.color)
+      }
+    })
+  }
+  return color
+}
+
+function isSvgNode(node: SceneNode) {
+  return (node.type === 'FRAME' || node.type === 'COMPONENT') && node.children.find(child => child.type === 'VECTOR')
+}
+
 function styledComponent(node: SceneNode) {
   if (node.type === 'VECTOR') {
     return
@@ -36,6 +53,8 @@ function styledComponent(node: SceneNode) {
   let tag = 'div'
   if (node.type === 'TEXT') {
     tag = 'p'
+  } else if (isSvgNode(node)) {
+    tag = 'img'
   }
 
   text += `const ${node.name} = styled.${tag}` + "`\n"
@@ -43,13 +62,9 @@ function styledComponent(node: SceneNode) {
   text += `  height: ${node.height};\n`
 
   if (node.type === 'TEXT') {
-    const fills = <Paint[]>(node.fills)
-    if (fills.length > 0) {
-      fills.forEach(fill => {
-        if (fill.type === 'SOLID') {
-          text += `  color: ${rgbToHex(fill.color)};\n`
-        }
-      })
+    const fillColor = getFillColor(node)
+    if (fillColor) {
+      text += `  color: ${fillColor}};\n`
     }
   }
   
@@ -108,13 +123,13 @@ function styledComponent(node: SceneNode) {
 
     // Auto layout
     if (node.layoutMode === 'HORIZONTAL') {
+      text += `  display: flex;\n`
       text += `  flex-direction: row;\n`
       text += `  align-content: space-between;\n`
-      text += `  item-spacing: ${node.itemSpacing};\n`
     } else if (node.layoutMode === 'VERTICAL') {
+      text += `  display: flex;\n`
       text += `  flex-direction: column;\n`
       text += `  align-content: space-between;\n`
-      text += `  item-spacing: ${node.itemSpacing};\n`
     }
 
     switch (node.layoutAlign) {
@@ -221,10 +236,36 @@ function levelTab(level: number) {
   return tab
 }
 
+let Svgs = ''
+// <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+// <path d="M12.9725 4.63002C12.7025 4.24752 12.2525 4.00002 11.75 4.00002L3.5 4.00752C2.675 4.00752 2 4.67502 2 5.50002V13C2 13.825 2.675 14.4925 3.5 14.4925L11.75 14.5C12.2525 14.5 12.7025 14.2525 12.9725 13.87L16.25 9.25002L12.9725 4.63002Z" fill="#C92892"/>
+// </svg>
+
+// if a frame has vector children, assuming that is svg
+
+
 function extractJsx(node: SceneNode, level: number) {
-  if (node.type === 'VECTOR') {
-    return ''
+  // check SVG
+  // console.log('splie:', node.name.split(':'))
+  // if (node.type === 'FRAME' && node.name.indexOf(':') >= 0 && node.name.split(':')[0] === 'SVG') {
+  if ((node.type === 'FRAME' || node.type === 'COMPONENT') && isSvgNode(node)) {
+    console.log('svg found')
+    let svg = ''
+    svg += `<svg width="${node.width}" height="${node.height}" viewBox="0 0 ${node.width} ${node.width}" fill="none" xmlns="http://www.w3.org/2000/svg">\n`
+    node.children.forEach(vector => {
+      if (vector.type === 'VECTOR') {
+        const fillColor = getFillColor(vector)
+        vector.vectorPaths.forEach(data => {
+          svg += `  <path d="${data.data}" ${fillColor ? 'fill="' + fillColor + '"': ''}/>\n`
+        })
+      }
+    })
+    svg += '</svg>\n'
+    Svgs += svg
+    // return ''
   }
+
+
   const tab = levelTab(level)
   let text = ''
 
@@ -236,6 +277,8 @@ function extractJsx(node: SceneNode, level: number) {
     text += `${tab}</${node.name}>\n`
   } else if (node.type === 'TEXT') {
     text += `${tab}<${node.name}>${node.characters}</${node.name}>\n`
+  } else if (isSvgNode(node)) {
+    text += `${tab}<${node.name}/>\n`
   } else {
     text += `${tab}<${node.name}/>\n`
   }
@@ -256,6 +299,9 @@ ${text}
 `
   // console.log(jsx)
   totalText += jsx + '\n'
+
+  totalText += '// SVGS \n'
+  totalText += Svgs + '\n'
 })
 
 allNodes.forEach(node => {
