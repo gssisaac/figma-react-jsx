@@ -74,6 +74,7 @@ function alignByContraints(node) {
     }
     return text;
 }
+// --------------------------- CSS --------------------------------
 function styledComponent(node) {
     if (node.type === 'VECTOR') {
         return;
@@ -104,6 +105,31 @@ function styledComponent(node) {
             });
         }
     }
+    // check parent container
+    let autoLayout = false;
+    if (node.parent.type === 'FRAME' || node.parent.type === 'INSTANCE' || node.parent.type === 'COMPONENT') {
+        // Auto layout
+        if (node.parent.layoutMode === 'HORIZONTAL') {
+            text += `  display: flex;\n`;
+            text += `  flex-direction: row;\n`;
+            text += `  align-content: space-between;\n`;
+            autoLayout = true;
+        }
+        else if (node.parent.layoutMode === 'VERTICAL') {
+            text += `  display: flex;\n`;
+            text += `  flex-direction: column;\n`;
+            text += `  align-content: space-between;\n`;
+            autoLayout = true;
+        }
+    }
+    // if not auto layout, we set specific width and height
+    if (!autoLayout) {
+        text += `  width: ${node.width}px;\n`;
+        text += `  height: ${node.height}px;\n`;
+        if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'TEXT') {
+            text += alignByContraints(node);
+        }
+    }
     if (node.type === 'FRAME' || node.type === 'INSTANCE') {
         // background
         const fills = (node.fills);
@@ -117,7 +143,9 @@ function styledComponent(node) {
         //radius
         //border-radius: 5px;
         if (typeof (node.cornerRadius) === 'number') {
-            text += `  border-radius: ${node.cornerRadius}px;\n`;
+            if (node.cornerRadius > 0) {
+                text += `  border-radius: ${node.cornerRadius}px;\n`;
+            }
         }
         else {
             if (node.topLeftRadius
@@ -142,25 +170,6 @@ function styledComponent(node) {
         }
         if (node.parent && node.parent.type === 'FRAME' && node.parent.layoutMode === 'VERTICAL') {
             text += `  margin-bottom: ${node.parent.itemSpacing}px;\n`;
-        }
-        // Auto layout
-        if (node.layoutMode === 'HORIZONTAL') {
-            text += `  display: flex;\n`;
-            text += `  flex-direction: row;\n`;
-            text += `  align-content: space-between;\n`;
-        }
-        else if (node.layoutMode === 'VERTICAL') {
-            text += `  display: flex;\n`;
-            text += `  flex-direction: column;\n`;
-            text += `  align-content: space-between;\n`;
-        }
-        else {
-            // if not auto layout, we set specific width and height
-            // if 
-            // text += `  position: relative;\n`
-            text += `  width: ${node.width}px;\n`;
-            text += `  height: ${node.height}px;\n`;
-            text += alignByContraints(node);
         }
     }
     else if (node.type === 'TEXT') {
@@ -207,6 +216,7 @@ function styledComponent(node) {
     text += '`';
     return text;
 }
+// --------------------------- JSX --------------------------------
 let totalText = '';
 const allNodes = [];
 function extractNodes(node) {
