@@ -35,7 +35,44 @@ function getFillColor(node) {
     return color;
 }
 function isSvgNode(node) {
-    return (node.type === 'FRAME' || node.type === 'COMPONENT') && node.children.find(child => child.type === 'VECTOR');
+    return (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') && node.children.find(child => child.type === 'VECTOR');
+}
+function alignByContraints(node) {
+    let text = '';
+    if (node.parent.type === 'FRAME' || node.parent.type === 'COMPONENT') {
+        // constraints
+        const { vertical, horizontal } = node.constraints;
+        switch (horizontal) {
+            case 'MIN':
+                text += `  left: ${node.x}px;\n`;
+                break;
+            case 'CENTER':
+                text += `  left: calc(50% - ${node.width}px/2);\n`;
+                break;
+            case 'MAX':
+                text += `  right: ${node.parent.width - (node.width + node.x)}px;\n`;
+                break;
+        }
+        switch (vertical) {
+            case 'MIN':
+                text += `  top: ${node.y}px;\n`;
+                break;
+            case 'CENTER':
+                text += `  top: calc(50% - ${node.height}px/2);\n`;
+                break;
+            case 'MAX':
+                text += `  bottom: ${node.height - node.y}px;\n`;
+                break;
+        }
+    }
+    if (text.length > 0) {
+        text += `  position: absolute;\n`;
+    }
+    else {
+        // only top parent can have relative
+        text += `  position: relative;\n`;
+    }
+    return text;
 }
 function styledComponent(node) {
     if (node.type === 'VECTOR') {
@@ -57,7 +94,7 @@ function styledComponent(node) {
             text += `  color: ${fillColor};\n`;
         }
     }
-    if (node.type === 'TEXT' || node.type === 'FRAME') {
+    if (node.type === 'TEXT' || node.type === 'FRAME' || node.type === 'INSTANCE') {
         // Stroke color
         if (node.strokes.length > 0) {
             node.strokes.forEach(stroke => {
@@ -67,7 +104,7 @@ function styledComponent(node) {
             });
         }
     }
-    if (node.type === 'FRAME') {
+    if (node.type === 'FRAME' || node.type === 'INSTANCE') {
         // background
         const fills = (node.fills);
         if (fills.length > 0) {
@@ -100,12 +137,12 @@ function styledComponent(node) {
             text += `  padding-right: ${node.horizontalPadding}px;\n`;
         }
         // Auto layout: item spacing to margin
-        // if (node.parent && node.parent.type === 'FRAME' && node.parent.layoutMode === 'HORIZONTAL') {
-        //   text += `  margin: ${node.parent.itemSpacing}px 0px;\n`
-        // }
-        // if (node.parent && node.parent.type === 'FRAME' && node.parent.layoutMode === 'VERTICAL') {
-        //   text += `  margin: 0px ${node.parent.itemSpacing}px;\n`
-        // }
+        if (node.parent && node.parent.type === 'FRAME' && node.parent.layoutMode === 'HORIZONTAL') {
+            text += `  margin-right: ${node.parent.itemSpacing}px;\n`;
+        }
+        if (node.parent && node.parent.type === 'FRAME' && node.parent.layoutMode === 'VERTICAL') {
+            text += `  margin-bottom: ${node.parent.itemSpacing}px;\n`;
+        }
         // Auto layout
         if (node.layoutMode === 'HORIZONTAL') {
             text += `  display: flex;\n`;
@@ -119,20 +156,11 @@ function styledComponent(node) {
         }
         else {
             // if not auto layout, we set specific width and height
-            text += `  display: flex;\n`;
+            // if 
+            // text += `  position: relative;\n`
             text += `  width: ${node.width}px;\n`;
             text += `  height: ${node.height}px;\n`;
-        }
-        switch (node.layoutAlign) {
-            case 'MIN':
-                text += `  align-self: flex-start;\n`;
-                break;
-            case 'CENTER':
-                text += `  align-self: center;\n`;
-                break;
-            case 'MAX':
-                text += `  align-self: flex-end;\n`;
-                break;
+            text += alignByContraints(node);
         }
     }
     else if (node.type === 'TEXT') {
@@ -147,26 +175,35 @@ function styledComponent(node) {
             RIGHT: 'right',
             JUSTIFIED: 'justify',
         };
+        const FONTWEIGHT = {
+            Light: '200',
+            Regular: 'normal',
+            Medium: '600',
+            Bold: 'bold',
+            Black: '800',
+        };
         const fontName = (node.fontName);
         // const lineHeight = <LineHeight>(node.lineHeight)
         text += `  font-size: ${Number(node.fontSize)}px;\n`;
         // text += node.lineHeight ? `  line-height: ${<LineHeight>(node.lineHeight)}px;\n`: ''
         text += fontName.family ? `  font-family: ${fontName.family};\n` : '';
-        text += fontName.style ? `  font-weight: ${fontName.style};\n` : '';
+        text += FONTWEIGHT[fontName.style] ? `  font-weight: ${FONTWEIGHT[fontName.style]};\n` : '';
         text += ALIGNHORIZONTAL[node.textAlignHorizontal] ? `  text-align: ${ALIGNHORIZONTAL[node.textAlignHorizontal]};\n` : '';
         text += ALIGNVERTICAL[node.textAlignVertical] ? `  vertical-align: ${ALIGNVERTICAL[node.textAlignVertical]};\n` : '';
         // text += node.letterSpacing ? `  letter-spacing: ${<LetterSpacing>(node.letterSpacing)}em;\n`: ''
         // Auto layout
         // if not auto layout, we set specific width and height
-        text += `  position: relative;\n`;
-        text += `  left: ${node.x}px;\n`;
-        text += `  top: ${node.y}px;\n`;
+        // text += `  position: relative;\n`
+        // text += `  left: ${node.x}px;\n`
+        // text += `  top: ${node.y}px;\n`
         text += `  width: ${node.width}px;\n`;
         text += `  height: ${node.height}px;\n`;
+        text += alignByContraints(node);
         // figma.loadFontAsync(node.getRangeFontName(0, node.characters.length - 1))
         // .then(font => {
         // })
     }
+    // alignment
     text += '`';
     return text;
 }
@@ -201,11 +238,11 @@ function levelTab(level) {
 }
 let Svgs = '';
 // if a frame has vector children, assuming that is svg
-function extractJsx(node, level) {
+function extractSvg(node) {
     // check SVG
     // console.log('splie:', node.name.split(':'))
     // if (node.type === 'FRAME' && node.name.indexOf(':') >= 0 && node.name.split(':')[0] === 'SVG') {
-    if ((node.type === 'FRAME' || node.type === 'COMPONENT') && isSvgNode(node)) {
+    if ((node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'INSTANCE') && isSvgNode(node)) {
         console.log('svg found');
         let svg = '';
         svg += `<svg width="${node.width}" height="${node.height}" viewBox="0 0 ${node.width} ${node.width}" fill="none" xmlns="http://www.w3.org/2000/svg">\n`;
@@ -219,7 +256,13 @@ function extractJsx(node, level) {
         });
         svg += '</svg>\n';
         Svgs += svg;
-        // return ''
+        return true;
+    }
+    return false;
+}
+function extractJsx(node, level) {
+    if (extractSvg(node)) {
+        return;
     }
     const tab = levelTab(level);
     let text = '';
