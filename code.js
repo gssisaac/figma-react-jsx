@@ -61,7 +61,7 @@ function alignByContraints(node) {
                 text += `  top: calc(50% - ${node.height}px/2);\n`;
                 break;
             case 'MAX':
-                text += `  bottom: ${node.height - node.y}px;\n`;
+                text += `  bottom: ${node.parent.height - (node.height + node.y)}px;\n`;
                 break;
         }
     }
@@ -106,28 +106,40 @@ function styledComponent(node) {
         }
     }
     // check parent container
-    let autoLayout = false;
-    if (node.parent.type === 'FRAME' || node.parent.type === 'INSTANCE' || node.parent.type === 'COMPONENT') {
-        // Auto layout
-        if (node.parent.layoutMode === 'HORIZONTAL') {
-            text += `  display: flex;\n`;
-            text += `  flex-direction: row;\n`;
-            text += `  align-content: space-between;\n`;
-            autoLayout = true;
-        }
-        else if (node.parent.layoutMode === 'VERTICAL') {
-            text += `  display: flex;\n`;
-            text += `  flex-direction: column;\n`;
-            text += `  align-content: space-between;\n`;
-            autoLayout = true;
+    let parentAutoLayout = false;
+    if (node.parent && (node.parent.type === 'FRAME' || node.parent.type === 'INSTANCE' || node.parent.type === 'COMPONENT')) {
+        if (node.parent.layoutMode === 'HORIZONTAL' || node.parent.layoutMode === 'VERTICAL') {
+            parentAutoLayout = true;
+            // Auto layout: item spacing to margin
+            if (node.parent.layoutMode === 'HORIZONTAL') {
+                text += `  margin-right: ${node.parent.itemSpacing}px;\n`;
+            }
+            if (node.parent.layoutMode === 'VERTICAL') {
+                text += `  margin-bottom: ${node.parent.itemSpacing}px;\n`;
+            }
         }
     }
     // if not auto layout, we set specific width and height
-    if (!autoLayout) {
+    if (!parentAutoLayout) {
         text += `  width: ${node.width}px;\n`;
         text += `  height: ${node.height}px;\n`;
         if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'TEXT') {
             text += alignByContraints(node);
+        }
+    }
+    console.log('node:', node.name, 'parent', node.parent, 'auto:', parentAutoLayout);
+    // check auto layout
+    if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
+        // Auto layout
+        if (node.layoutMode === 'HORIZONTAL') {
+            text += `  display: flex;\n`;
+            text += `  flex-direction: row;\n`;
+            text += `  align-content: space-between;\n`;
+        }
+        else if (node.layoutMode === 'VERTICAL') {
+            text += `  display: flex;\n`;
+            text += `  flex-direction: column;\n`;
+            text += `  align-content: space-between;\n`;
         }
     }
     if (node.type === 'FRAME' || node.type === 'INSTANCE') {
@@ -164,13 +176,13 @@ function styledComponent(node) {
             text += `  padding-left: ${node.horizontalPadding}px;\n`;
             text += `  padding-right: ${node.horizontalPadding}px;\n`;
         }
-        // Auto layout: item spacing to margin
-        if (node.parent && node.parent.type === 'FRAME' && node.parent.layoutMode === 'HORIZONTAL') {
-            text += `  margin-right: ${node.parent.itemSpacing}px;\n`;
-        }
-        if (node.parent && node.parent.type === 'FRAME' && node.parent.layoutMode === 'VERTICAL') {
-            text += `  margin-bottom: ${node.parent.itemSpacing}px;\n`;
-        }
+        // // Auto layout: item spacing to margin
+        // if (node.parent && node.parent.type === 'FRAME' && node.parent.layoutMode === 'HORIZONTAL') {
+        //   text += `  margin-right: ${node.parent.itemSpacing}px;\n`
+        // }
+        // if (node.parent && node.parent.type === 'FRAME' && node.parent.layoutMode === 'VERTICAL') {
+        //   text += `  margin-bottom: ${node.parent.itemSpacing}px;\n`
+        // }
     }
     else if (node.type === 'TEXT') {
         const ALIGNVERTICAL = {
@@ -202,14 +214,9 @@ function styledComponent(node) {
         // text += node.letterSpacing ? `  letter-spacing: ${<LetterSpacing>(node.letterSpacing)}em;\n`: ''
         // Auto layout
         // if not auto layout, we set specific width and height
-        // text += `  position: relative;\n`
-        // text += `  left: ${node.x}px;\n`
-        // text += `  top: ${node.y}px;\n`
         text += `  width: ${node.width}px;\n`;
         text += `  height: ${node.height}px;\n`;
-        text += alignByContraints(node);
-        // figma.loadFontAsync(node.getRangeFontName(0, node.characters.length - 1))
-        // .then(font => {
+        // text += alignByContraints(node)
         // })
     }
     // alignment

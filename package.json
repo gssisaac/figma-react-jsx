@@ -1,0 +1,13 @@
+{
+    "name": "figma-react-jsx",
+    "productName": "figma-react-jsx",
+    "author": {
+        "name": "Isaac Chaneel Lee",
+        "email": "gssisaac@gmail.com"
+    },
+    "scripts": {
+        "start": "tsc -w"
+    },
+    "version": "0.1.1",
+    "license": "MIT"
+}
