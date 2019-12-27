@@ -60,12 +60,11 @@ function extractSvg(node) {
     if (node.name in allSvgs) {
         return true;
     }
+    const nodeName = clearName(node.name);
     // check SVG
-    // console.log('splie:', node.name.split(':'))
-    // if (node.type === 'FRAME' && node.name.indexOf(':') >= 0 && node.name.split(':')[0] === 'SVG') {
     if ((node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'INSTANCE') && isSvgNode(node)) {
         let svg = '';
-        svg += `const SVG${node.name} = <svg width="${node.width}" height="${node.height}" viewBox="-${node.x} -${node.y} ${node.width} ${node.width}" fill="none" xmlns="http://www.w3.org/2000/svg">\n`;
+        svg += `const SVG${nodeName} = <svg width="${node.width}" height="${node.height}" viewBox="-${node.x} -${node.y} ${node.width} ${node.width}" fill="none" xmlns="http://www.w3.org/2000/svg">\n`;
         node.children.forEach(vector => {
             if (vector.type === 'VECTOR') {
                 const fillColor = getFillColor(vector);
@@ -84,36 +83,40 @@ function extractSvg(node) {
 function extractJsx(node, level) {
     const tab = levelTab(level);
     let text = '';
+    const nodeName = clearName(node.name);
     if (extractSvg(node)) {
-        // text += `${tab}<${node.name} src={SVG_${node.name}}/>\n`
-        text += `${tab}<${node.name}>\n`;
-        text += `${tab}  {SVG${node.name}}\n`;
-        text += `${tab}</${node.name}>\n`;
+        // text += `${tab}<${nodeName} src={SVG_${nodeName}}/>\n`
+        text += `${tab}<${nodeName}>\n`;
+        text += `${tab}  {SVG${nodeName}}\n`;
+        text += `${tab}</${nodeName}>\n`;
         return text;
     }
     if ((node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT' || node.type === 'INSTANCE') && node.children.length > 0) {
-        text += `${tab}<${node.name}>\n`;
+        text += `${tab}<${nodeName}>\n`;
         node.children.forEach(child => {
             text += extractJsx(child, level + 1);
         });
-        text += `${tab}</${node.name}>\n`;
+        text += `${tab}</${nodeName}>\n`;
     }
     else if (node.type === 'TEXT') {
-        text += `${tab}<${node.name}>${node.characters}</${node.name}>\n`;
+        text += `${tab}<${nodeName}>${node.characters}</${nodeName}>\n`;
     }
     else if (isSvgNode(node)) {
-        text += `${tab}<${node.name}/>\n`;
+        text += `${tab}<${nodeName}/>\n`;
     }
     else {
-        text += `${tab}<${node.name}/>\n`;
+        text += `${tab}<${nodeName}/>\n`;
     }
     return text;
+}
+function clearName(str) {
+    return str.replace(/\s/g, '').trim();
 }
 figma.currentPage.selection.forEach(head => {
     const text = extractJsx(head, 2);
     let styledComponents = getCSSStyles(head, true);
     allNodes.forEach(node => {
-        console.log(`node[${node.name}]: `, node);
+        // console.log(`node[${node.name}]: `, node)
         if (node !== head) {
             const text = getCSSStyles(node, false);
             if (text) {
@@ -125,7 +128,7 @@ figma.currentPage.selection.forEach(head => {
 import React from 'react'
 import styled from 'styled-components'
 
-function ${head.name}Component() {
+function ${clearName(head.name)}Component() {
   return (
 ${text}
   )
@@ -134,7 +137,7 @@ ${text}
 // Styled components
 ${styledComponents}
 
-export default ${head.name}Component
+export default ${clearName(head.name)}Component
 `;
     // console.log(jsx)
     totalText += jsx + '\n';
@@ -366,7 +369,8 @@ function getCSSStyles(node, isHead) {
     if (node.type == 'VECTOR') {
         return '';
     }
-    css += `const ${node.name} = styled.${getTag(node)}` + "`\n";
+    const nodeName = clearName(node.name);
+    css += `const ${nodeName} = styled.${getTag(node)}` + "`\n";
     if (isParentAutoLayout(node)) {
         css += cssAutoLayoutItemSpacing(node.parent);
     }
