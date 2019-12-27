@@ -109,24 +109,23 @@ function extractJsx(node, level) {
     }
     return text;
 }
-// console.log('// JSX')
-// totalText += '// functional component\n'
-figma.currentPage.selection.forEach(node => {
-    const text = extractJsx(node, 2);
-    // totalText += '// Styled components\n'
-    let styledComponents = '';
+figma.currentPage.selection.forEach(head => {
+    const text = extractJsx(head, 2);
+    let styledComponents = getCSSStyles(head, true);
     allNodes.forEach(node => {
-        console.log('node:', node);
-        const text = getCSSStyles(node);
-        if (text) {
-            styledComponents += text + '\n';
+        console.log(`node[${node.name}]: `, node);
+        if (node !== head) {
+            const text = getCSSStyles(node, false);
+            if (text) {
+                styledComponents += text + '\n';
+            }
         }
     });
     const jsx = `
 import React from 'react'
 import styled from 'styled-components'
 
-function ${node.name}Component() {
+function ${head.name}Component() {
   return (
 ${text}
   )
@@ -135,7 +134,7 @@ ${text}
 // Styled components
 ${styledComponents}
 
-export default ${node.name}Component
+export default ${head.name}Component
 `;
     // console.log(jsx)
     totalText += jsx + '\n';
@@ -255,7 +254,7 @@ function cssSize(node) {
     css += `  height: ${node.height}px;\n`;
     return css;
 }
-function isFlex(node) {
+function isAutoLayout(node) {
     if (!node) {
         return false;
     }
@@ -266,7 +265,7 @@ function isFlex(node) {
     }
     return false;
 }
-function isParentFlex(node) {
+function isParentAutoLayout(node) {
     if (node.parent && (node.parent.type === 'FRAME' || node.parent.type === 'INSTANCE' || node.parent.type === 'COMPONENT')) {
         if (node.parent.layoutMode === 'HORIZONTAL' || node.parent.layoutMode === 'VERTICAL') {
             return true;
@@ -274,7 +273,7 @@ function isParentFlex(node) {
     }
     return false;
 }
-function cssFlexItemSpacing(node) {
+function cssAutoLayoutItemSpacing(node) {
     let css = '';
     // Auto layout: item spacing to margin
     if (node.layoutMode === 'HORIZONTAL') {
@@ -285,7 +284,7 @@ function cssFlexItemSpacing(node) {
     }
     return css;
 }
-function cssNodePosition(node, position) {
+function cssConstraints(node) {
     let css = '';
     if (node.constraints) {
         const { vertical, horizontal } = node.constraints;
@@ -311,17 +310,13 @@ function cssNodePosition(node, position) {
                 css += `  bottom: ${node.parent.height - (node.height + node.y)}px;\n`;
                 break;
         }
-        css += `  position: ${position};\n`;
-        // if (position === absolute) {
-        //   css += `  position: ${position};\n`;
-        // } else {
-        //   // only top parent can have relative
-        //   css += `  position: relative;\n`;
-        // }
     }
     return css;
 }
-function cssFlex(node) {
+function cssPosition(position) {
+    return `  position: ${position};\n`;
+}
+function cssAutoLayout(node) {
     let css = '';
     let autoLayout = false;
     if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
@@ -359,7 +354,11 @@ function getTag(node) {
     }
     return tag;
 }
-function getCSSStyles(node) {
+function cssComment(comment) {
+    return `  /* ${comment} */\n`;
+}
+// get css for a node
+function getCSSStyles(node, isHead) {
     let css = '';
     if (!node) {
         return '';
@@ -368,36 +367,49 @@ function getCSSStyles(node) {
         return '';
     }
     css += `const ${node.name} = styled.${getTag(node)}` + "`\n";
-    if (isParentFlex(node)) {
-        css += cssFlexItemSpacing(node.parent);
+    if (isParentAutoLayout(node)) {
+        css += cssAutoLayoutItemSpacing(node.parent);
+    }
+    else {
+        css += cssSize(node);
+        css += cssConstraints(node);
+    }
+    css += cssColorStyle(node);
+    // if head, we set size
+    if (isHead) {
+        css += cssComment('Head');
+        css += cssSize(node);
     }
     // if container
     if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
-        if (isFlex(node)) {
-            css += cssFlex(node);
-        }
-        else {
-            css += cssSize(node);
-            if (isParentFlex(node)) {
-                css += cssNodePosition(node, 'relative');
+        if (isAutoLayout(node)) {
+            css += cssComment('Auto layout');
+            css += cssAutoLayout(node);
+            if (isParentAutoLayout(node)) {
             }
             else {
-                css += cssNodePosition(node, 'absolute');
+                css += cssPosition('absolute');
+            }
+        }
+        else {
+            if (isParentAutoLayout(node)) {
+                css += cssPosition('relative');
+            }
+            else {
+                // console.log(`${node.name} is Frame, and parent ${node.parent.name} is Frame`)
+                css += cssPosition('absolute');
             }
         }
         css += cssFrameStyle(node);
-        css += cssColorStyle(node);
     }
     else { // leaf node
-        css += cssSize(node);
-        if (!isParentFlex(node)) {
-            css += cssNodePosition(node, 'absolute');
+        if (!isParentAutoLayout(node)) {
+            css += cssPosition('absolute');
         }
         // get specific styles
         if (node.type === 'TEXT') {
             css += cssTextStyle(node);
         }
-        css += cssColorStyle(node);
     }
     css += '`\n';
     return css;
