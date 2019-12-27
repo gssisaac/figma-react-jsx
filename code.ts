@@ -461,6 +461,7 @@ function getCSSStyles(node: SceneNode, isHead: boolean): string {
       }
     } else {
       if (isParentAutoLayout(node)) {
+        css += cssSize(node)
         css += cssPosition('relative')
       } else {
         // console.log(`${node.name} is Frame, and parent ${node.parent.name} is Frame`)
@@ -469,7 +470,9 @@ function getCSSStyles(node: SceneNode, isHead: boolean): string {
     }
     css += cssFrameStyle(node)
   } else { // leaf node
-    if (!isParentAutoLayout(node)) {
+    if (isParentAutoLayout(node)) {
+      css += cssSize(node)
+    } else {
       css += cssPosition('absolute')
     }
 

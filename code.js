@@ -393,6 +393,7 @@ function getCSSStyles(node, isHead) {
         }
         else {
             if (isParentAutoLayout(node)) {
+                css += cssSize(node);
                 css += cssPosition('relative');
             }
             else {
@@ -403,7 +404,10 @@ function getCSSStyles(node, isHead) {
         css += cssFrameStyle(node);
     }
     else { // leaf node
-        if (!isParentAutoLayout(node)) {
+        if (isParentAutoLayout(node)) {
+            css += cssSize(node);
+        }
+        else {
             css += cssPosition('absolute');
         }
         // get specific styles
