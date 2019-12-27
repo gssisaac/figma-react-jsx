@@ -1,23 +1,37 @@
-// This plugin creates 5 rectangles on the screen.
-// const numberOfRectangles = 5
+// import { getFillColor, isSvgNode } from './utils'
+// import { getCSSStyles } from './styled'
 
-// This file holds the main code for the plugins. It has access to the *document*.
-// You can access browser APIs such as the network by creating a UI which contains
-// a full browser environment (see documentation).
+function isSvgNode(node: SceneNode) {
+  return (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') && node.children.find(child => child.type === 'VECTOR')
+}
+  
+function componentToHex(c) {
+  const v = Math.round(c * 255)
+  var hex = v.toString(16);
+  return hex.length == 1 ? "0" + hex : hex;
+}
 
-// const nodes: SceneNode[] = [];
-// for (let i = 0; i < numberOfRectangles; i++) {
-//   const rect = figma.createRectangle();
-//   rect.x = i * 150;
-//   rect.fills = [{type: 'SOLID', color: {r: 1, g: 0.5, b: 0}}];
-//   figma.currentPage.appendChild(rect);
-//   nodes.push(rect);
-// }
-// figma.currentPage.selection = nodes;
-// figma.viewport.scrollAndZoomIntoView(nodes);
-import { getFillColor, isSvgNode } from './utils'
+function rgbToHex(color) {
+  return "#" + componentToHex(color.r) + componentToHex(color.g) + componentToHex(color.b);
+}
 
-import { styledComponent } from './styled'
+// function getFillColor(node: FrameNode | TextNode | ComponentNode | VectorNode) {
+function getFillColor(node: any) {
+  if (!node.fills) {
+    return null
+  }
+  let color = null
+  const fills = <Paint[]>(node.fills)
+  if (fills.length > 0) {
+    fills.forEach(fill => {
+      if (fill.type === 'SOLID') {
+        color = rgbToHex(fill.color)
+      }
+    })
+  }
+  return color
+} 
+
 
 // --------------------------- JSX --------------------------------
 
@@ -119,7 +133,8 @@ figma.currentPage.selection.forEach(node => {
 
   let styledComponents = ''
   allNodes.forEach(node => {
-    const text = styledComponent(node)
+    console.log('node:', node)
+    const text = getCSSStyles(node)
     if (text) {
       styledComponents += text + '\n'
     }
@@ -166,3 +181,290 @@ console.log(totalText)
 // Make sure to close the plugin when you're done. Otherwise the plugin will
 // keep running, which shows the cancel button at the bottom of the screen.
 // figma.closePlugin();
+
+
+
+
+type ContainerNode =
+  FrameNode |
+  // GroupNode |
+  ComponentNode |
+  InstanceNode
+
+// enum NodePosition {
+//   relative = 1, 
+//   absolute = 2,
+// }
+// const relative = 'relative'
+// const absolute = 'absolute'
+
+// const CONTAINER_NODES = ['FRAME', 'INSTANCE', 'COMPONENT']
+
+
+function cssColorStyle(node: SceneNode): string {
+  let css = ''
+  if (node.type === 'TEXT') {
+    const fillColor = getFillColor(node)
+    if (fillColor) {
+      css += `  color: ${fillColor};\n`
+    }
+  }
+  
+  if (node.type === 'TEXT' || node.type === 'FRAME' || node.type === 'INSTANCE') {
+    // Stroke color
+    if (node.strokes.length > 0) {      
+      node.strokes.forEach(stroke => {
+        if (stroke.type === 'SOLID') {
+          css += `  border: ${node.strokeWeight}px solid ${rgbToHex(stroke.color)};\n`
+        }
+      })
+    }
+  }
+  return css
+}
+
+function cssFrameStyle(node: SceneNode): string {
+  let css = ''
+  if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
+   // background
+   const fills = <Paint[]>(node.fills)
+   if (fills.length > 0) {
+     fills.forEach(fill => {
+       if (fill.type === 'SOLID') {
+         css += `  background: ${rgbToHex(fill.color)};\n`
+       }
+     })
+   }
+
+   //radius
+   //border-radius: 5px;
+   if (typeof(node.cornerRadius) === 'number') {
+     if (node.cornerRadius > 0) {
+       css += `  border-radius: ${node.cornerRadius}px;\n`
+     }
+   } else {
+     if (node.topLeftRadius
+       && node.topRightRadius
+       && node.bottomRightRadius
+       && node.bottomLeftRadius) {
+       css += `  border-radius: ${node.topLeftRadius}px ${node.topRightRadius}px ${node.bottomRightRadius}px ${node.bottomLeftRadius}px;\n`
+     }
+   }
+
+   // add padding
+   if (node.verticalPadding) {
+     css += `  padding-top: ${node.verticalPadding}px;\n`
+     css += `  padding-bottom: ${node.verticalPadding}px;\n`
+   }
+   if (node.horizontalPadding) {
+     css += `  padding-left: ${node.horizontalPadding}px;\n`
+     css += `  padding-right: ${node.horizontalPadding}px;\n`
+   }
+  }
+  return css
+}
+
+function cssTextStyle(node: SceneNode): string {
+  const ALIGNVERTICAL = {
+    CNETER: 'middle',
+    TOP: 'flex-start',
+    BOTTOM: 'flex-end',
+  }
+  const ALIGNHORIZONTAL = {
+    CNETER: 'center',
+    LEFT: 'left',
+    RIGHT: 'right',
+    JUSTIFIED: 'justify',
+  }
+  const FONTWEIGHT = {
+    Light: '200',
+    Regular: 'normal',
+    Medium: '600',
+    Bold: 'bold',
+    Black: '800',
+  }
+  
+  let css = ''
+  if (node.type === 'TEXT') {
+   
+    const fontName = <FontName>(node.fontName)
+    // const lineHeight = <LineHeight>(node.lineHeight)
+  
+    css += `  font-size: ${Number(node.fontSize)}px;\n`;
+    // css += node.lineHeight ? `  line-height: ${<LineHeight>(node.lineHeight)}px;\n`: ''
+    css += fontName.family ?`  font-family: ${fontName.family};\n`: ''
+    css += FONTWEIGHT[fontName.style] ? `  font-weight: ${FONTWEIGHT[fontName.style]};\n`: ''
+    css += ALIGNHORIZONTAL[node.textAlignHorizontal] ? `  text-align: ${ALIGNHORIZONTAL[node.textAlignHorizontal]};\n`: ''
+    css += ALIGNVERTICAL[node.textAlignVertical] ? `  vertical-align: ${ALIGNVERTICAL[node.textAlignVertical]};\n`: ''
+    // css += node.letterSpacing ? `  letter-spacing: ${<LetterSpacing>(node.letterSpacing)}em;\n`: ''
+    
+    // if not auto layout, we set specific width and height
+    css += `  line-height: ${node.height}px;\n`
+  }
+  return css
+}
+
+function cssSize(node: SceneNode): string {
+  let css = ''
+  css += `  width: ${node.width}px;\n`
+  css += `  height: ${node.height}px;\n`
+  return css
+}
+
+
+function isFlex(node: SceneNode): boolean {
+  if (!node) {
+    return false
+  }
+  if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
+    if (node.layoutMode === 'HORIZONTAL' || node.layoutMode === 'VERTICAL') {
+      return true
+    }
+  }
+  return false
+}
+
+function isParentFlex(node: SceneNode): boolean {
+  if (node.parent && (node.parent.type === 'FRAME' || node.parent.type === 'INSTANCE' || node.parent.type === 'COMPONENT')) {
+    if (node.parent.layoutMode === 'HORIZONTAL' || node.parent.layoutMode === 'VERTICAL') {
+      return true
+    }
+  }
+  return false
+}
+
+function cssFlexItemSpacing(node): string{
+  let css = ''
+  // Auto layout: item spacing to margin
+  if (node.layoutMode === 'HORIZONTAL') {
+    css += `  margin-right: ${node.itemSpacing}px;\n`
+  }
+  if (node.layoutMode === 'VERTICAL') {
+    css += `  margin-bottom: ${node.itemSpacing}px;\n`
+  }
+  return css
+}
+
+function cssNodePosition(node, position: string): string {
+  let css = ''
+  if (node.constraints) {
+    const { vertical, horizontal } = node.constraints
+    switch (horizontal) {
+      case 'MIN':
+        css += `  left: ${node.x}px;\n`;
+        break
+      case 'CENTER':
+        css += `  left: calc(50% - ${node.width}px/2);\n`;
+        break
+      case 'MAX':
+        css += `  right: ${node.parent.width - (node.width + node.x)}px;\n`;
+        break
+    }
+    switch (vertical) {
+      case 'MIN':
+        css += `  top: ${node.y}px;\n`;
+        break
+      case 'CENTER':
+        css += `  top: calc(50% - ${node.height}px/2);\n`;
+        break
+      case 'MAX':
+        css += `  bottom: ${node.parent.height - (node.height + node.y)}px;\n`;
+        break
+    }
+
+    css += `  position: ${position};\n`;
+    // if (position === absolute) {
+    //   css += `  position: ${position};\n`;
+    // } else {
+    //   // only top parent can have relative
+    //   css += `  position: relative;\n`;
+    // }
+  }
+  return css
+}
+
+function cssFlex(node: SceneNode): string {
+  let css = ''
+  let autoLayout = false
+  if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
+    // Auto layout
+    if (node.layoutMode === 'HORIZONTAL') {
+      css += `  display: flex;\n`
+      css += `  flex-direction: row;\n`
+      css += `  align-content: space-between;\n`
+      autoLayout = true
+    } else if (node.layoutMode === 'VERTICAL') {
+      css += `  display: flex;\n`
+      css += `  flex-direction: column;\n`
+      css += `  align-content: space-between;\n`
+      autoLayout = true
+    }
+
+    if (!autoLayout) {
+      css += `  position: relative;\n`
+    }
+  }
+  return css
+}
+
+// function containerNode(node: SceneNode): ContainerNode {
+//   if (node.type in CONTAINER_NODES) {
+//     return <ContainerNode>(node)
+//   }
+// }
+
+function getTag(node: SceneNode): string {
+  let tag = 'div'
+  if (node.type === 'TEXT') {
+    tag = 'div'
+  } else if (isSvgNode(node)) {
+    tag = 'div'
+  }
+  return tag
+}
+
+function getCSSStyles(node: SceneNode): string {
+  let css = ''
+  if (!node) {
+    return ''
+  }
+  if (node.type == 'VECTOR') {
+    return ''
+  }
+
+  css += `const ${node.name} = styled.${getTag(node)}` + "`\n"
+
+
+  if (isParentFlex(node)) {
+    css += cssFlexItemSpacing(node.parent)
+  } 
+
+  // if container
+  if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
+    if (isFlex(node)) {
+      css += cssFlex(node)
+    } else {
+      css += cssSize(node)
+      if (isParentFlex(node)) {
+        css += cssNodePosition(node, 'relative')
+      } else {
+        css += cssNodePosition(node, 'absolute')
+      }
+    }
+    css += cssFrameStyle(node)
+    css += cssColorStyle(node)
+  } else { // leaf node
+    css += cssSize(node)
+    if (!isParentFlex(node)) {
+      css += cssNodePosition(node, 'absolute')
+    }
+
+    // get specific styles
+    if (node.type === 'TEXT') {
+      css += cssTextStyle(node)
+    }
+    css += cssColorStyle(node)
+  }
+  css += '`\n'
+  return css
+}
