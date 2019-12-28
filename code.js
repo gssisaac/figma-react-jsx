@@ -64,7 +64,7 @@ function extractSvg(node) {
     // check SVG
     if ((node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'INSTANCE') && isSvgNode(node)) {
         let svg = '';
-        svg += `const SVG${nodeName} = <svg width="${node.width}" height="${node.height}" viewBox="-${node.x} -${node.y} ${node.width} ${node.width}" fill="none" xmlns="http://www.w3.org/2000/svg">\n`;
+        svg += `const SVG${nodeName} = <svg width="${node.width}" height="${node.height}" viewBox="0 0 ${node.width} ${node.width}" fill="none" xmlns="http://www.w3.org/2000/svg">\n`;
         node.children.forEach(vector => {
             if (vector.type === 'VECTOR') {
                 const fillColor = getFillColor(vector);
@@ -278,12 +278,17 @@ function isParentAutoLayout(node) {
 }
 function cssAutoLayoutItemSpacing(node) {
     let css = '';
+    // except for last child
+    const children = node.parent.children;
+    const lastOne = (children.length > 0 && children[children.length - 1] === node);
     // Auto layout: item spacing to margin
-    if (node.layoutMode === 'HORIZONTAL') {
-        css += `  margin-right: ${node.itemSpacing}px;\n`;
-    }
-    if (node.layoutMode === 'VERTICAL') {
-        css += `  margin-bottom: ${node.itemSpacing}px;\n`;
+    if (!lastOne) {
+        if (node.parent.layoutMode === 'HORIZONTAL') {
+            css += `  margin-right: ${node.parent.itemSpacing}px;\n`;
+        }
+        if (node.parent.layoutMode === 'VERTICAL') {
+            css += `  margin-bottom: ${node.parent.itemSpacing}px;\n`;
+        }
     }
     return css;
 }
@@ -321,24 +326,17 @@ function cssPosition(position) {
 }
 function cssAutoLayout(node) {
     let css = '';
-    let autoLayout = false;
     if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
         // Auto layout
+        css += `  display: flex;\n`;
         if (node.layoutMode === 'HORIZONTAL') {
-            css += `  display: flex;\n`;
             css += `  flex-direction: row;\n`;
-            css += `  align-content: space-between;\n`;
-            autoLayout = true;
         }
         else if (node.layoutMode === 'VERTICAL') {
-            css += `  display: flex;\n`;
             css += `  flex-direction: column;\n`;
-            css += `  align-content: space-between;\n`;
-            autoLayout = true;
         }
-        if (!autoLayout) {
-            css += `  position: relative;\n`;
-        }
+        css += `  align-self: center;\n`;
+        // css += `  align-content: space-between;\n`
     }
     return css;
 }
@@ -371,32 +369,38 @@ function getCSSStyles(node, isHead) {
     }
     const nodeName = clearName(node.name);
     css += `const ${nodeName} = styled.${getTag(node)}` + "`\n";
-    if (isParentAutoLayout(node)) {
-        css += cssAutoLayoutItemSpacing(node.parent);
+    // if head, we set size
+    if (isHead) {
+        css += cssComment('Head');
+    }
+    else if (isParentAutoLayout(node)) {
+        css += cssAutoLayoutItemSpacing(node);
     }
     else {
         css += cssSize(node);
         css += cssConstraints(node);
-    }
-    css += cssColorStyle(node);
-    // if head, we set size
-    if (isHead) {
-        css += cssComment('Head');
-        css += cssSize(node);
     }
     // if container
     if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
         if (isAutoLayout(node)) {
             css += cssComment('Auto layout');
             css += cssAutoLayout(node);
-            if (isParentAutoLayout(node)) {
+            if (isHead) {
+                css += cssSize(node);
+                css += cssPosition('relative');
+            }
+            else if (isParentAutoLayout(node)) {
             }
             else {
                 css += cssPosition('absolute');
             }
         }
         else {
-            if (isParentAutoLayout(node)) {
+            if (isHead) {
+                css += cssSize(node);
+                css += cssPosition('relative');
+            }
+            else if (isParentAutoLayout(node)) {
                 css += cssSize(node);
                 css += cssPosition('relative');
             }
@@ -408,7 +412,11 @@ function getCSSStyles(node, isHead) {
         css += cssFrameStyle(node);
     }
     else { // leaf node
-        if (isParentAutoLayout(node)) {
+        if (isHead) {
+            css += cssSize(node);
+            css += cssPosition('relative');
+        }
+        else if (isParentAutoLayout(node)) {
             css += cssSize(node);
         }
         else {
@@ -419,6 +427,11 @@ function getCSSStyles(node, isHead) {
             css += cssTextStyle(node);
         }
     }
+    css += cssColorStyle(node);
+    css += cssDebugBorder(node);
     css += '`\n';
     return css;
+}
+function cssDebugBorder(node) {
+    return `  border: 0.2px solid red;\n`;
 }
