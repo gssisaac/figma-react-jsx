@@ -36,23 +36,27 @@ function getFillColor(node: any) {
 // --------------------------- JSX --------------------------------
 
 let totalText = ''
+let imports = []
 const allNodes: SceneNode[] = []
 
-function extractNodes(node: SceneNode) {
+function extractAllNodes(node: SceneNode) {
   const found = allNodes.find(n => n.name === node.name)
+  if (node.parent.type === 'INSTANCE' && !isSvgNode(node)) {
+    return
+  }
   if (!found) {
     allNodes.push(node)
   }
-  if (node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
+  if (node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT') {
     node.children.forEach((child) => {
       // console.log("child", child)
-      extractNodes(child)
+      extractAllNodes(child)
     })
   }
 }
 
 figma.currentPage.selection.forEach(node => {
-  extractNodes(node)
+  extractAllNodes(node)
 })
 
 // totalText += '// Styled components\n'
@@ -109,7 +113,7 @@ function extractJsx(node: SceneNode, level: number) {
     return text
   }
 
-  if ((node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT' || node.type === 'INSTANCE' )&& node.children.length > 0) {
+  if ((node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT')&& node.children.length > 0) {
     text += `${tab}<${nodeName}>\n`
     node.children.forEach(child => {
       text += extractJsx(child, level + 1)
@@ -118,6 +122,11 @@ function extractJsx(node: SceneNode, level: number) {
   } else if (node.type === 'TEXT') {
     text += `${tab}<${nodeName}>${node.characters}</${nodeName}>\n`
   } else if (isSvgNode(node)) {
+    text += `${tab}<${nodeName}/>\n`
+  } else if (node.type === 'INSTANCE') {
+    if (!imports.find(name => name === nodeName)) {
+      imports.push(nodeName)
+    }
     text += `${tab}<${nodeName}/>\n`
   } else {
     text += `${tab}<${nodeName}/>\n`
@@ -147,8 +156,12 @@ figma.currentPage.selection.forEach(head => {
   const jsx = `
 import React from 'react'
 import styled from 'styled-components'
+${imports.map(nodeName => `import ${nodeName} from './${nodeName}'\n`)}
 
-function ${clearName(head.name)}Component() {
+type Props = {
+}
+
+function ${clearName(head.name)}Component(props: Props) {
   return (
 ${text}
   )
@@ -184,7 +197,7 @@ console.log(totalText)
 
 // Make sure to close the plugin when you're done. Otherwise the plugin will
 // keep running, which shows the cancel button at the bottom of the screen.
-// figma.closePlugin();
+figma.closePlugin();
 
 
 
@@ -363,7 +376,8 @@ function cssConstraints(node): string {
         css += `  left: ${node.x}px;\n`;
         break
       case 'CENTER':
-        css += `  left: calc(50% - ${node.width}px/2);\n`;
+      case 'SCALE':
+            css += `  left: calc(50% - ${node.width}px/2);\n`;
         break
       case 'MAX':
         css += `  right: ${node.parent.width - (node.width + node.x)}px;\n`;
@@ -373,6 +387,7 @@ function cssConstraints(node): string {
       case 'MIN':
         css += `  top: ${node.y}px;\n`;
         break
+      case 'SCALE':
       case 'CENTER':
         css += `  top: calc(50% - ${node.height}px/2);\n`;
         break
@@ -445,6 +460,7 @@ function getCSSStyles(node: SceneNode, isHead: boolean): string {
     css += cssAutoLayoutItemSpacing(node)
   } else {
     css += cssSize(node)
+    css += cssComment('Constraints')
     css += cssConstraints(node)
   }
 
