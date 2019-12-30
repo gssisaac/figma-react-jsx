@@ -137,7 +137,7 @@ figma.currentPage.selection.forEach(head => {
     const jsx = `
 import React from 'react'
 import styled from 'styled-components'
-${imports.map(nodeName => `import ${nodeName} from './${nodeName}'\n`)}
+${imports.map(nodeName => `import ${nodeName}Component from './${nodeName}'\n`)}
 
 type Props = {
 }
@@ -271,6 +271,10 @@ function cssTextStyle(node) {
         // css += node.letterSpacing ? `  letter-spacing: ${<LetterSpacing>(node.letterSpacing)}em;\n`: ''
         // if not auto layout, we set specific width and height
         css += `  line-height: ${node.height}px;\n`;
+        // wrapping
+        css += `  white-space: nowrap;\n`;
+        css += `  overflow: hidden;\n`;
+        css += `  text-overflow: ellipsis;\n`;
     }
     return css;
 }
@@ -312,6 +316,16 @@ function cssAutoLayoutItemSpacing(node) {
         if (node.parent.layoutMode === 'VERTICAL') {
             css += `  margin-bottom: ${node.parent.itemSpacing}px;\n`;
         }
+    }
+    console.log(`node: ${node.name}, layout:${node.layoutAlign}`);
+    //alignment
+    const LAYOUTALIGN = {
+        CNETER: 'center',
+        MIN: 'flex-start',
+        MAX: 'flex-end',
+    };
+    if (node.layoutAlign in LAYOUTALIGN) {
+        css += `  align-self:${LAYOUTALIGN[node.layoutAlign]};\n`;
     }
     return css;
 }
@@ -393,7 +407,12 @@ function getCSSStyles(node, isHead) {
         return '';
     }
     const nodeName = clearName(node.name);
-    css += `const ${nodeName} = styled.${getTag(node)}` + "`\n";
+    if (node.type === 'INSTANCE') {
+        css += `const ${nodeName} = styled(${node.name}Component)` + "`\n";
+    }
+    else {
+        css += `const ${nodeName} = styled.${getTag(node)}` + "`\n";
+    }
     // if head, we set size
     if (isHead) {
         css += cssComment('Head');
