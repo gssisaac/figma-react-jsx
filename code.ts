@@ -38,6 +38,8 @@ function getFillColor(node: any) {
 let totalText = ''
 let imports = []
 let allProps = []
+let allFunctions = []
+
 const allNodes: SceneNode[] = []
 
 function extractAllNodes(node: SceneNode) {
@@ -99,6 +101,43 @@ function extractSvg(node: SceneNode): boolean {
   return false
 }
 
+type ExtractProps = {
+  prop: string
+  onClick: string
+  onClickProp: string
+}
+
+function extractProps(node: SceneNode): ExtractProps {
+  const { nodeName, params } = parseNodeName(node.name)
+  let prop = null
+  let onClick = ''
+  let onClickProp = ''
+  if (params && params.props) {
+    prop = params.props
+  }
+  if (prop) {
+    allProps.push(`${prop}: string`)
+  }
+  if (params && params.clickProps) {
+    onClick = ` onClick={props.${params.clickProps}}`
+    const name = `${params.clickProps}: () => void`
+    if (!allProps.find(prop => prop === name)) {
+      allProps.push(name)
+    }
+  }
+  if (params && params.click) {
+    onClick = ` onClick={${params.click}}`
+    const name =
+`  const ${params.click} = () => {
+  }
+`
+    if (!allFunctions.find(func => func === name)) {
+      allFunctions.push(name)
+    }
+  }
+  return { prop, onClick, onClickProp }
+}
+
 
 function extractJsx(node: SceneNode, level: number) {
   const tab = levelTab(level)
@@ -106,40 +145,37 @@ function extractJsx(node: SceneNode, level: number) {
 
   // const nodeName = clearName(node.name)
   const { nodeName, params } = parseNodeName(node.name)
-  let prop = null
-  if (params && params.props) {
-    prop = params.props
-  }
-  if (prop) {
-    allProps.push(prop)
-  }
+  const { prop, onClick, onClickProp } = extractProps(node)
 
   if (extractSvg(node)) {
     // text += `${tab}<${nodeName} src={SVG_${nodeName}}/>\n`
-    text += `${tab}<${nodeName}>\n`
+    text += `${tab}<${nodeName}${onClick}>\n`
     text += `${tab}  {SVG${nodeName}}\n`
     text += `${tab}</${nodeName}>\n`
     return text
   }
 
   if ((node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT') && node.children.length > 0) {
-    text += `${tab}<${nodeName}>\n`
+    text += `${tab}<${nodeName}${onClick}>\n`
     node.children.forEach(child => {
       text += extractJsx(child, level + 1)
     })
     text += `${tab}</${nodeName}>\n`
   } else if (node.type === 'TEXT') {
-    const textContent = prop ? prop : node.characters
-    text += `${tab}<${nodeName}>{props.${textContent}}</${nodeName}>\n`
+    if (prop) {
+      text += `${tab}<${nodeName}${onClick}>{props.${prop}}</${nodeName}>\n`
+    } else {
+      text += `${tab}<${nodeName}${onClick}>${node.characters}</${nodeName}>\n`
+    }
   } else if (isSvgNode(node)) {
-    text += `${tab}<${nodeName}/>\n`
+    text += `${tab}<${nodeName}${onClick}/>\n`
   } else if (node.type === 'INSTANCE') {
     if (!imports.find(name => name === nodeName)) {
       imports.push(nodeName)
     }
-    text += `${tab}<${nodeName}/>\n`
+    text += `${tab}<${nodeName}${onClick}/>\n`
   } else {
-    text += `${tab}<${nodeName}/>\n`
+    text += `${tab}<${nodeName}${onClick}/>\n`
   }
   return text
 }
@@ -156,6 +192,9 @@ function clearName(str: string): string {
 type ParamType = {
   props?: string
   hoverOn?: string
+  click?: string
+  clickProps?: string
+  visible?: string
 }
 type ParsedNodeName = {
   nodeName: string
@@ -201,26 +240,27 @@ figma.currentPage.selection.forEach(head => {
   imports.forEach(nodeName => importsText += `import ${nodeName}Component from './${nodeName}'\n`)
   
   let propsText = ''
-  allProps.forEach(prop => propsText += `  ${prop}: string\n`)
+  allProps.forEach(prop => propsText += `  ${prop}\n`)
+
+  let funcsText = ''
+  allFunctions.forEach(func => funcsText += func)
 
   const jsx = `
 import React from 'react'
 import styled from 'styled-components'
 ${importsText}
-
 type Props = {
-${propsText}
-}
+${propsText}}
 
 function ${clearName(head.name)}Component(props: Props) {
+  ${allFunctions}
   return (
-${text}
-  )
+${text}  )
 }
 
 // Styled components
-${styledComponents}
 
+${styledComponents}
 export default ${clearName(head.name)}Component
 `
   // console.log(jsx)
@@ -432,6 +472,7 @@ function cssAutoLayoutItemSpacing(node): string{
   if (node.layoutAlign in LAYOUTALIGN) {
     css += `  align-self: ${LAYOUTALIGN[node.layoutAlign]};\n`
   }
+  // console.log('css:', css)
   return css
 }
 
@@ -481,8 +522,6 @@ function cssAutoLayout(node: SceneNode): string {
     } else if (node.layoutMode === 'VERTICAL') {
       css += `  flex-direction: column;\n`
     }
-    css += `  align-self: center;\n`
-    // css += `  align-content: space-between;\n`
   }
   return css
 }
@@ -519,7 +558,7 @@ function getCSSStyles(node: SceneNode, isHead: boolean): string {
 
   const nodeName = clearName(node.name)
   if (node.type === 'INSTANCE') {
-    css += `const ${nodeName} = styled(${node.name}Component)` + "`\n"
+    css += `const ${nodeName} = styled(${nodeName}Component)` + "`\n"
   } else {
     css += `const ${nodeName} = styled.${getTag(node)}` + "`\n"
   }
@@ -575,8 +614,12 @@ function getCSSStyles(node: SceneNode, isHead: boolean): string {
       css += cssTextStyle(node)
     }
   }
-  css += cssColorStyle(node)
-  css += cssDebugBorder(node)
+
+  // color except for svg node
+  if (!isSvgNode(node)) {
+    css += cssColorStyle(node)
+  }
+  // css += cssDebugBorder(node)
   css += '`\n'
   return css
 }
