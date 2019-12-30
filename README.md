@@ -5,89 +5,125 @@ This plugin is for Figma to generate React hooks JSX and Styled components.
 
 2. Run this Plugins
 
-3. Open console
+3. Open console in Figma (Context menu > Plugin > Development > Console)
 
 4. See results on consle and copy and use it
 
 
+`Using Props
+
+``Using props by setting layer name in Figma like below
+
+```
+PageNumber$props:pageIndex
+FileTitle$props:fileName
+
 ```
 
-// Styled components
-const Item = styled.div`
-  width: 169;
-  height: 34;
-  border: 1px solid #101010;
-  background: #ffffff;
-  border-radius: 0px;
-  padding-top: 8;
-  padding-bottom: 8;
-  padding-left: 16;
-  padding-right: 16;
-  margin: 0px 1px;
-  align-self: flex-start;
-`
-const Content = styled.div`
-  width: 134;
-  height: 18;
-  border-radius: 0px;
-  flex-direction: row;
-  align-content: space-between;
-  item-spacing: 8;
-  align-self: flex-start;
-`
-const Icon = styled.div`
-  width: 18;
-  height: 18;
-  border-radius: 0px;
-  margin: 8px 0px;
-  align-self: center;
-`
-const SVGIcon = styled.div`
-  width: 14;
-  height: 14;
-`
-const TitleFrame = styled.div`
-  width: 108;
-  height: 18;
-  border-radius: 0px;
-  margin: 8px 0px;
-  flex-direction: row;
-  align-content: space-between;
-  item-spacing: 6;
-  align-self: center;
-`
-const SVGIcon = styled.div`
-  width: 18;
-  height: 18;
-`
-const Title = styled.p`
-  width: 84;
-  height: 12;
-  color: #000000;
-  border: 1px solid #ef6d6d;
-  font-size: 12px;
-  font-family: Roboto;
-  font-weight: Bold;
-  text-align: undefined;
-  algin-items: flex-start;
-`
-// functional component
+We parse these layer name as props for React to set Text element
 
-function Component(props: Props) {
+
+```
+
+import React from 'react'
+import styled from 'styled-components'
+
+
+type Props = {
+  fileName: string
+  pageIndex: string
+
+}
+
+function ThumbnailAreaComponent(props: Props) {
   return (
-    <Item>
-      <Content>
-        <Icon>
-          <SVGIcon/>
-        </Icon>
-        <TitleFrame>
-          <SVGIcon/>
-          <Title>Marked only</Title>
-        </TitleFrame>
-      </Content>
-    </Item>
+    <ThumbnailArea>
+      <ThumnailImage>
+        <Image/>
+      </ThumnailImage>
+      <FileNameFrame>
+        <FileTitle>{props.fileName}</FileTitle>
+        <PageNumber>{props.pageIndex}</PageNumber>
+      </FileNameFrame>
+    </ThumbnailArea>
 
   )
 }
 
+// Styled components
+const ThumbnailArea = styled.div`
+  /* Head */
+  /* Auto layout */
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  width: 207px;
+  height: 111px;
+  position: relative;
+  border: 0.2px solid red;
+`
+const ThumnailImage = styled.div`
+  margin-bottom: 8px;
+  align-self: flex-start;
+  width: 161px;
+  height: 91px;
+  position: relative;
+  border-radius: 4px;
+  border: 0.2px solid red;
+`
+
+const Image = styled.div`
+  width: 161px;
+  height: 91px;
+  /* Constraints */
+  left: 0px;
+  top: 0px;
+  position: absolute;
+  border: 0.2px solid red;
+`
+
+const FileNameFrame = styled.div`
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  align-self: center;
+  border: 0.2px solid red;
+`
+
+const FileTitle = styled.div`
+  margin-right: 8px;
+  align-self: flex-start;
+  width: 163px;
+  height: 12px;
+  font-size: 9px;
+  font-family: Open Sans;
+  font-weight: bold;
+  text-align: left;
+  vertical-align: flex-end;
+  line-height: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #333333;
+  border: 0.2px solid red;
+`
+
+const PageNumber = styled.div`
+  align-self: flex-start;
+  width: 36px;
+  height: 12px;
+  font-size: 9px;
+  font-family: Open Sans;
+  font-weight: bold;
+  text-align: left;
+  vertical-align: flex-end;
+  line-height: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #333333;
+  border: 0.2px solid red;
+`
+
+export default ThumbnailAreaComponent
 ```
