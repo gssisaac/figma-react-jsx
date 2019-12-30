@@ -325,7 +325,7 @@ function cssAutoLayoutItemSpacing(node) {
         MAX: 'flex-end',
     };
     if (node.layoutAlign in LAYOUTALIGN) {
-        css += `  align-self:${LAYOUTALIGN[node.layoutAlign]};\n`;
+        css += `  align-self: ${LAYOUTALIGN[node.layoutAlign]};\n`;
     }
     return css;
 }
