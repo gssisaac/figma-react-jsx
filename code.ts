@@ -37,6 +37,7 @@ function getFillColor(node: any) {
 
 let totalText = ''
 let imports = []
+let allProps = []
 const allNodes: SceneNode[] = []
 
 function extractAllNodes(node: SceneNode) {
@@ -103,7 +104,15 @@ function extractJsx(node: SceneNode, level: number) {
   const tab = levelTab(level)
   let text = ''
 
-  const nodeName = clearName(node.name)
+  // const nodeName = clearName(node.name)
+  const { nodeName, params } = parseNodeName(node.name)
+  let prop = null
+  if (params && params.props) {
+    prop = params.props
+  }
+  if (prop) {
+    allProps.push(prop)
+  }
 
   if (extractSvg(node)) {
     // text += `${tab}<${nodeName} src={SVG_${nodeName}}/>\n`
@@ -113,14 +122,15 @@ function extractJsx(node: SceneNode, level: number) {
     return text
   }
 
-  if ((node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT')&& node.children.length > 0) {
+  if ((node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT') && node.children.length > 0) {
     text += `${tab}<${nodeName}>\n`
     node.children.forEach(child => {
       text += extractJsx(child, level + 1)
     })
     text += `${tab}</${nodeName}>\n`
   } else if (node.type === 'TEXT') {
-    text += `${tab}<${nodeName}>${node.characters}</${nodeName}>\n`
+    const textContent = prop ? prop : node.characters
+    text += `${tab}<${nodeName}>{props.${textContent}}</${nodeName}>\n`
   } else if (isSvgNode(node)) {
     text += `${tab}<${nodeName}/>\n`
   } else if (node.type === 'INSTANCE') {
@@ -134,9 +144,43 @@ function extractJsx(node: SceneNode, level: number) {
   return text
 }
 
-function clearName(str: string) {
-  return str.replace(/\s/g, '').trim()
+function clearName(str: string): string {
+  const arr = str.split('$')
+  if (arr.length === 0) {
+    return str.replace(/\s/g, '').trim()
+  } else {
+    return arr[0].replace(/\s/g, '').trim()
+  }
 }
+
+type ParamType = {
+  props?: string
+  hoverOn?: string
+}
+type ParsedNodeName = {
+  nodeName: string
+  params?: ParamType
+}
+
+function parseNodeName(str: string): ParsedNodeName {
+  const arr = str.split('$')
+  let result: ParsedNodeName = {
+    nodeName: arr[0].replace(/\s/g, '').trim(),
+  }
+
+  if (arr.length >= 2) {
+    let params: ParamType = {}
+    try {
+      arr[1].trim().split(',').forEach(param => {
+        const values = param.trim().split(':')
+        params[values[0]] = values[1].trim()
+      })
+      result = {...result, params: params}
+    } catch(e) {console.log(e)}
+  }
+  return result
+}
+
 
 figma.currentPage.selection.forEach(head => {
   const text = extractJsx(head, 2)
@@ -152,13 +196,20 @@ figma.currentPage.selection.forEach(head => {
       }
     }
   })
+
+  let importsText = ''
+  imports.forEach(nodeName => importsText += `import ${nodeName}Component from './${nodeName}'\n`)
   
+  let propsText = ''
+  allProps.forEach(prop => propsText += `  ${prop}: string\n`)
+
   const jsx = `
 import React from 'react'
 import styled from 'styled-components'
-${imports.map(nodeName => `import ${nodeName}Component from './${nodeName}'\n`)}
+${importsText}
 
 type Props = {
+${propsText}
 }
 
 function ${clearName(head.name)}Component(props: Props) {
@@ -370,7 +421,7 @@ function cssAutoLayoutItemSpacing(node): string{
     }
   }
 
-  console.log(`node: ${node.name}, layout:${node.layoutAlign}`)
+  // console.log(`node: ${node.name}, layout:${node.layoutAlign}`)
 
   //alignment
   const LAYOUTALIGN = {
@@ -472,8 +523,6 @@ function getCSSStyles(node: SceneNode, isHead: boolean): string {
   } else {
     css += `const ${nodeName} = styled.${getTag(node)}` + "`\n"
   }
-  
-
 
   // if head, we set size
   if (isHead) {

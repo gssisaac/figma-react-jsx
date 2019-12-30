@@ -30,6 +30,7 @@ function getFillColor(node) {
 // --------------------------- JSX --------------------------------
 let totalText = '';
 let imports = [];
+let allProps = [];
 const allNodes = [];
 function extractAllNodes(node) {
     const found = allNodes.find(n => n.name === node.name);
@@ -87,7 +88,15 @@ function extractSvg(node) {
 function extractJsx(node, level) {
     const tab = levelTab(level);
     let text = '';
-    const nodeName = clearName(node.name);
+    // const nodeName = clearName(node.name)
+    const { nodeName, params } = parseNodeName(node.name);
+    let prop = null;
+    if (params && params.props) {
+        prop = params.props;
+    }
+    if (prop) {
+        allProps.push(prop);
+    }
     if (extractSvg(node)) {
         // text += `${tab}<${nodeName} src={SVG_${nodeName}}/>\n`
         text += `${tab}<${nodeName}>\n`;
@@ -103,7 +112,8 @@ function extractJsx(node, level) {
         text += `${tab}</${nodeName}>\n`;
     }
     else if (node.type === 'TEXT') {
-        text += `${tab}<${nodeName}>${node.characters}</${nodeName}>\n`;
+        const textContent = prop ? prop : node.characters;
+        text += `${tab}<${nodeName}>{props.${textContent}}</${nodeName}>\n`;
     }
     else if (isSvgNode(node)) {
         text += `${tab}<${nodeName}/>\n`;
@@ -120,7 +130,33 @@ function extractJsx(node, level) {
     return text;
 }
 function clearName(str) {
-    return str.replace(/\s/g, '').trim();
+    const arr = str.split('$');
+    if (arr.length === 0) {
+        return str.replace(/\s/g, '').trim();
+    }
+    else {
+        return arr[0].replace(/\s/g, '').trim();
+    }
+}
+function parseNodeName(str) {
+    const arr = str.split('$');
+    let result = {
+        nodeName: arr[0].replace(/\s/g, '').trim(),
+    };
+    if (arr.length >= 2) {
+        let params = {};
+        try {
+            arr[1].trim().split(',').forEach(param => {
+                const values = param.trim().split(':');
+                params[values[0]] = values[1].trim();
+            });
+            result = Object.assign(Object.assign({}, result), { params: params });
+        }
+        catch (e) {
+            console.log(e);
+        }
+    }
+    return result;
 }
 figma.currentPage.selection.forEach(head => {
     const text = extractJsx(head, 2);
@@ -134,12 +170,17 @@ figma.currentPage.selection.forEach(head => {
             }
         }
     });
+    let importsText = '';
+    imports.forEach(nodeName => importsText += `import ${nodeName}Component from './${nodeName}'\n`);
+    let propsText = '';
+    allProps.forEach(prop => propsText += `  ${prop}: string\n`);
     const jsx = `
 import React from 'react'
 import styled from 'styled-components'
-${imports.map(nodeName => `import ${nodeName}Component from './${nodeName}'\n`)}
+${importsText}
 
 type Props = {
+${propsText}
 }
 
 function ${clearName(head.name)}Component(props: Props) {
@@ -317,7 +358,7 @@ function cssAutoLayoutItemSpacing(node) {
             css += `  margin-bottom: ${node.parent.itemSpacing}px;\n`;
         }
     }
-    console.log(`node: ${node.name}, layout:${node.layoutAlign}`);
+    // console.log(`node: ${node.name}, layout:${node.layoutAlign}`)
     //alignment
     const LAYOUTALIGN = {
         CNETER: 'center',
