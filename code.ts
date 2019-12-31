@@ -131,9 +131,13 @@ function extractProps(node: SceneNode): ExtractProps {
 `  const ${params.click} = () => {
   }
 `
-    if (!allFunctions.find(func => func === name)) {
+  if (!allFunctions.find(func => func === name)) {
       allFunctions.push(name)
     }
+  }
+
+  if (params && params.hover) {
+    // styles += '  ${' + params.hover + '}'
   }
   return { prop, onClick, onClickProp }
 }
@@ -192,10 +196,10 @@ function clearName(str: string): string {
 type ParamType = {
   props?: string
   hoverOn?: string
-  hoverFill?: string
+  hover?: string  // whiteFillHover, boundsFillHover, textHighlightHover
   click?: string
   clickProps?: string
-  visible?: string
+  visible?: string  // triggerHover, triggerProps
 }
 type ParsedNodeName = {
   nodeName: string

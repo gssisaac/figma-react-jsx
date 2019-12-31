@@ -113,6 +113,9 @@ function extractProps(node) {
             allFunctions.push(name);
         }
     }
+    if (params && params.hover) {
+        // styles += '  ${' + params.hover + '}'
+    }
     return { prop, onClick, onClickProp };
 }
 function extractJsx(node, level) {
