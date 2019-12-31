@@ -481,7 +481,7 @@ function cssAutoLayoutItemSpacing(node): string{
 
   //alignment
   const LAYOUTALIGN = {
-    CNETER: 'center',
+    CENTER: 'center',
     MIN: 'flex-start',
     MAX: 'flex-end',
   }

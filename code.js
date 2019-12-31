@@ -402,7 +402,7 @@ function cssAutoLayoutItemSpacing(node) {
     // console.log(`node: ${node.name}, layout:${node.layoutAlign}`)
     //alignment
     const LAYOUTALIGN = {
-        CNETER: 'center',
+        CENTER: 'center',
         MIN: 'flex-start',
         MAX: 'flex-end',
     };
