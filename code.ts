@@ -169,7 +169,7 @@ function extractJsx(node: SceneNode, level: number) {
     }
   } else if (isSvgNode(node)) {
     text += `${tab}<${nodeName}${onClick}/>\n`
-  } else if (node.type === 'INSTANCE') {
+  } else if (isInstanceNode(node)) {
     if (!imports.find(name => name === nodeName)) {
       imports.push(nodeName)
     }
@@ -192,6 +192,7 @@ function clearName(str: string): string {
 type ParamType = {
   props?: string
   hoverOn?: string
+  hoverFill?: string
   click?: string
   clickProps?: string
   visible?: string
@@ -253,7 +254,7 @@ type Props = {
 ${propsText}}
 
 function ${clearName(head.name)}Component(props: Props) {
-  ${allFunctions}
+${funcsText}
   return (
 ${text}  )
 }
@@ -318,7 +319,7 @@ function cssColorStyle(node: SceneNode): string {
     }
   }
   
-  if (node.type === 'TEXT' || node.type === 'FRAME' || node.type === 'INSTANCE') {
+  if (node.type === 'TEXT' || node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
     // Stroke color
     if (node.strokes.length > 0) {      
       node.strokes.forEach(stroke => {
@@ -333,7 +334,7 @@ function cssColorStyle(node: SceneNode): string {
 
 function cssFrameStyle(node: SceneNode): string {
   let css = ''
-  if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
+  if ((node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') && !isSvgNode(node)) {
    // background
    const fills = <Paint[]>(node.fills)
    if (fills.length > 0) {
@@ -360,14 +361,18 @@ function cssFrameStyle(node: SceneNode): string {
    }
 
    // add padding
-   if (node.verticalPadding) {
-     css += `  padding-top: ${node.verticalPadding}px;\n`
-     css += `  padding-bottom: ${node.verticalPadding}px;\n`
-   }
-   if (node.horizontalPadding) {
-     css += `  padding-left: ${node.horizontalPadding}px;\n`
-     css += `  padding-right: ${node.horizontalPadding}px;\n`
-   }
+  //  if (node.verticalPadding) {
+  //    css += `  padding-top: ${node.verticalPadding}px;\n`
+  //    css += `  padding-bottom: ${node.verticalPadding}px;\n`
+  //  }
+  //  if (node.horizontalPadding) {
+  //    css += `  padding-left: ${node.horizontalPadding}px;\n`
+  //    css += `  padding-right: ${node.horizontalPadding}px;\n`
+  //  }
+
+   if (node.verticalPadding || node.horizontalPadding) {
+    css += `  padding: ${node.verticalPadding}px ${node.horizontalPadding}px;\n`
+  }
   }
   return css
 }
@@ -397,29 +402,40 @@ function cssTextStyle(node: SceneNode): string {
    
     const fontName = <FontName>(node.fontName)
     // const lineHeight = <LineHeight>(node.lineHeight)
-  
-    css += `  font-size: ${Number(node.fontSize)}px;\n`;
-    // css += node.lineHeight ? `  line-height: ${<LineHeight>(node.lineHeight)}px;\n`: ''
-    css += fontName.family ?`  font-family: ${fontName.family};\n`: ''
-    css += FONTWEIGHT[fontName.style] ? `  font-weight: ${FONTWEIGHT[fontName.style]};\n`: ''
-    css += ALIGNHORIZONTAL[node.textAlignHorizontal] ? `  text-align: ${ALIGNHORIZONTAL[node.textAlignHorizontal]};\n`: ''
-    css += ALIGNVERTICAL[node.textAlignVertical] ? `  vertical-align: ${ALIGNVERTICAL[node.textAlignVertical]};\n`: ''
-    // css += node.letterSpacing ? `  letter-spacing: ${<LetterSpacing>(node.letterSpacing)}em;\n`: ''
+    // css += `  font-size: ${Number(node.fontSize)}px;\n`;
+    // css += fontName.family ?`  font-family: ${fontName.family};\n`: ''
+    // css += FONTWEIGHT[fontName.style] ? `  font-weight: ${FONTWEIGHT[fontName.style]};\n`: ''
+    // css += ALIGNHORIZONTAL[node.textAlignHorizontal] ? `  text-align: ${ALIGNHORIZONTAL[node.textAlignHorizontal]};\n`: ''
+    // css += ALIGNVERTICAL[node.textAlignVertical] ? `  vertical-align: ${ALIGNVERTICAL[node.textAlignVertical]};\n`: ''
+    // // css += node.letterSpacing ? `  letter-spacing: ${<LetterSpacing>(node.letterSpacing)}em;\n`: ''
     
-    // if not auto layout, we set specific width and height
-    css += `  line-height: ${node.height}px;\n`
+    // // if not auto layout, we set specific width and height
+    // css += `  line-height: ${node.height}px;\n`
+    // css += node.lineHeight ? `  line-height: ${<LineHeight>(node.lineHeight)}px;\n`: ''
+
+    let styles = ''
+    fontName.style.split(' ').forEach(style => {
+      styles += FONTWEIGHT[style] ? FONTWEIGHT[style] : style
+      styles += ' '
+    })
+
+    // one line
+    css += `  font: ${styles}${Number(node.fontSize)}px/${Number(node.fontSize)}px ${fontName.family};\n`
 
     // wrapping
     css += `  white-space: nowrap;\n`
     css += `  overflow: hidden;\n`
-    css += `  text-overflow: ellipsis;\n`
+    // css += `  text-overflow: ellipsis;\n`
   }
   return css
 }
 
 function cssSize(node: SceneNode): string {
   let css = ''
-  css += `  width: ${node.width}px;\n`
+  if (node.type !== 'TEXT') {
+    // by default do not set width for text
+    css += `  width: ${node.width}px;\n`
+  }
   css += `  height: ${node.height}px;\n`
   return css
 }
@@ -546,6 +562,10 @@ function cssComment(comment: string) {
   return `  /* ${comment} */\n`
 }
 
+function isInstanceNode(node: SceneNode) {
+  return node.type === 'INSTANCE' && !isSvgNode(node)
+}
+
 // get css for a node
 function getCSSStyles(node: SceneNode, isHead: boolean): string {
   let css = ''
@@ -557,7 +577,7 @@ function getCSSStyles(node: SceneNode, isHead: boolean): string {
   }
 
   const nodeName = clearName(node.name)
-  if (node.type === 'INSTANCE') {
+  if (isInstanceNode(node)) {
     css += `const ${nodeName} = styled(${nodeName}Component)` + "`\n"
   } else {
     css += `const ${nodeName} = styled.${getTag(node)}` + "`\n"
