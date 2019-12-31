@@ -118,6 +118,29 @@ function extractProps(node) {
     }
     return { prop, onClick, onClickProp };
 }
+// rule
+/*
+  visible
+  $visible: prop=thumbnail
+  $visible: hover=MenuItem  #visible
+  
+  value
+  $value: prop=MenuItem     #inside children
+  
+  props
+  - put props inside props area
+  $props: onClick=onTabClicked
+  
+  <ThumbnailImage onClick={props.onTabClicked}/>
+
+  $props: src=props.thumbnail
+
+  <ThumbnailImage src={props.thumbnail}/>
+
+  style
+  - put into style area
+  $style: hover=
+*/
 function extractJsx(node, level) {
     const tab = levelTab(level);
     let text = '';
@@ -212,6 +235,7 @@ import React from 'react'
 import styled from 'styled-components'
 ${importsText}
 type Props = {
+  className: string
 ${propsText}}
 
 function ${clearName(head.name)}Component(props: Props) {
@@ -468,6 +492,18 @@ function cssAutoLayout(node) {
 //     return <ContainerNode>(node)
 //   }
 // }
+function isImageNode(node) {
+    let image = false;
+    if (node.type === 'RECTANGLE') {
+        const fills = (node.fills);
+        fills.forEach(fill => {
+            if (fill.type === 'IMAGE') {
+                image = true;
+            }
+        });
+    }
+    return image;
+}
 function getTag(node) {
     let tag = 'div';
     if (node.type === 'TEXT') {
@@ -475,6 +511,9 @@ function getTag(node) {
     }
     else if (isSvgNode(node)) {
         tag = 'div';
+    }
+    else if (isImageNode(node)) {
+        tag = 'img';
     }
     return tag;
 }

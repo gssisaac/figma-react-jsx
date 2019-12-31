@@ -142,6 +142,29 @@ function extractProps(node: SceneNode): ExtractProps {
   return { prop, onClick, onClickProp }
 }
 
+// rule
+/*
+  visible
+  $visible: prop=thumbnail
+  $visible: hover=MenuItem  #visible
+  
+  value
+  $value: prop=MenuItem     #inside children
+  
+  props
+  - put props inside props area
+  $props: onClick=onTabClicked
+  
+  <ThumbnailImage onClick={props.onTabClicked}/>
+
+  $props: src=props.thumbnail
+
+  <ThumbnailImage src={props.thumbnail}/>
+
+  style
+  - put into style area
+  $style: hover=
+*/
 
 function extractJsx(node: SceneNode, level: number) {
   const tab = levelTab(level)
@@ -150,6 +173,7 @@ function extractJsx(node: SceneNode, level: number) {
   // const nodeName = clearName(node.name)
   const { nodeName, params } = parseNodeName(node.name)
   const { prop, onClick, onClickProp } = extractProps(node)
+  
 
   if (extractSvg(node)) {
     // text += `${tab}<${nodeName} src={SVG_${nodeName}}/>\n`
@@ -255,6 +279,7 @@ import React from 'react'
 import styled from 'styled-components'
 ${importsText}
 type Props = {
+  className: string
 ${propsText}}
 
 function ${clearName(head.name)}Component(props: Props) {
@@ -552,12 +577,27 @@ function cssAutoLayout(node: SceneNode): string {
 //   }
 // }
 
+function isImageNode(node: SceneNode): boolean {
+  let image = false
+  if (node.type === 'RECTANGLE') {
+    const fills = <Paint[]>(node.fills)
+    fills.forEach(fill => {
+      if (fill.type === 'IMAGE') {
+        image = true
+      }
+    })
+  }
+  return image
+}
+
 function getTag(node: SceneNode): string {
   let tag = 'div'
   if (node.type === 'TEXT') {
     tag = 'div'
   } else if (isSvgNode(node)) {
     tag = 'div'
+  } else if (isImageNode(node)) {
+    tag = 'img'
   }
   return tag
 }
