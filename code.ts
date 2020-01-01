@@ -166,7 +166,7 @@ function extractProps(node: SceneNode): ExtractProps {
   $style: hover=
 */
 
-function extractJsx(node: SceneNode, level: number) {
+function extractJsx(node: SceneNode, level: number, props: string) {
   const tab = levelTab(level)
   let text = ''
 
@@ -177,33 +177,33 @@ function extractJsx(node: SceneNode, level: number) {
 
   if (extractSvg(node)) {
     // text += `${tab}<${nodeName} src={SVG_${nodeName}}/>\n`
-    text += `${tab}<${nodeName}${onClick}>\n`
+    text += `${tab}<${nodeName}${props}${onClick}>\n`
     text += `${tab}  {SVG${nodeName}}\n`
     text += `${tab}</${nodeName}>\n`
     return text
   }
 
   if ((node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT') && node.children.length > 0) {
-    text += `${tab}<${nodeName}${onClick}>\n`
+    text += `${tab}<${nodeName}${props}${onClick}>\n`
     node.children.forEach(child => {
-      text += extractJsx(child, level + 1)
+      text += extractJsx(child, level + 1, '')
     })
     text += `${tab}</${nodeName}>\n`
   } else if (node.type === 'TEXT') {
     if (prop) {
-      text += `${tab}<${nodeName}${onClick}>{props.${prop}}</${nodeName}>\n`
+      text += `${tab}<${nodeName}${props}${onClick}>{props.${prop}}</${nodeName}>\n`
     } else {
-      text += `${tab}<${nodeName}${onClick}>${node.characters}</${nodeName}>\n`
+      text += `${tab}<${nodeName}${props}${onClick}>${node.characters}</${nodeName}>\n`
     }
   } else if (isSvgNode(node)) {
-    text += `${tab}<${nodeName}${onClick}/>\n`
+    text += `${tab}<${nodeName}${props}${onClick}/>\n`
   } else if (isInstanceNode(node)) {
     if (!imports.find(name => name === nodeName)) {
       imports.push(nodeName)
     }
-    text += `${tab}<${nodeName}${onClick}/>\n`
+    text += `${tab}<${nodeName}${props}${onClick}/>\n`
   } else {
-    text += `${tab}<${nodeName}${onClick}/>\n`
+    text += `${tab}<${nodeName}${props}${onClick}/>\n`
   }
   return text
 }
@@ -251,7 +251,7 @@ function parseNodeName(str: string): ParsedNodeName {
 
 
 figma.currentPage.selection.forEach(head => {
-  const text = extractJsx(head, 2)
+  const text = extractJsx(head, 2, ' className={props.className}')
 
   let styledComponents = getCSSStyles(head, true)
   
@@ -348,7 +348,7 @@ function cssColorStyle(node: SceneNode): string {
     }
   }
   
-  if (node.type === 'TEXT' || node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
+  if (node.type === 'TEXT' || node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT' || node.type === 'RECTANGLE') {
     // Stroke color
     if (node.strokes.length > 0) {      
       node.strokes.forEach(stroke => {
@@ -357,6 +357,14 @@ function cssColorStyle(node: SceneNode): string {
         }
       })
     }
+  }
+  return css
+}
+
+function cssOpacity(node): string {
+  let css = ''
+  if (node.opacity && node.opacity !== 1.0) {
+    css += `  opacity: ${node.opacity};\n`
   }
   return css
 }
@@ -430,7 +438,6 @@ function cssTextStyle(node: SceneNode): string {
   if (node.type === 'TEXT') {
    
     const fontName = <FontName>(node.fontName)
-    // const lineHeight = <LineHeight>(node.lineHeight)
     // css += `  font-size: ${Number(node.fontSize)}px;\n`;
     // css += fontName.family ?`  font-family: ${fontName.family};\n`: ''
     // css += FONTWEIGHT[fontName.style] ? `  font-weight: ${FONTWEIGHT[fontName.style]};\n`: ''
@@ -439,8 +446,6 @@ function cssTextStyle(node: SceneNode): string {
     // // css += node.letterSpacing ? `  letter-spacing: ${<LetterSpacing>(node.letterSpacing)}em;\n`: ''
     
     // // if not auto layout, we set specific width and height
-    // css += `  line-height: ${node.height}px;\n`
-    // css += node.lineHeight ? `  line-height: ${<LineHeight>(node.lineHeight)}px;\n`: ''
 
     let styles = ''
     fontName.style.split(' ').forEach(style => {
@@ -448,8 +453,16 @@ function cssTextStyle(node: SceneNode): string {
       styles += ' '
     })
 
+    const lineHeight = <LineHeight>(node.lineHeight)
+    let lineHeightCss = ''
+    if (lineHeight.unit === 'PERCENT') {
+      lineHeightCss = `/${Number(lineHeight.value)}%`
+    } else if (lineHeight.unit === 'PIXELS') {
+      lineHeightCss = `/${Number(lineHeight.value)}px`
+    }
+
     // one line
-    css += `  font: ${styles}${Number(node.fontSize)}px/${Number(node.fontSize)}px ${fontName.family};\n`
+    css += `  font: ${styles}${Number(node.fontSize)}px${lineHeightCss} ${fontName.family};\n`
 
     // wrapping
     css += `  white-space: nowrap;\n`
@@ -679,10 +692,11 @@ function getCSSStyles(node: SceneNode, isHead: boolean): string {
     }
   }
 
-  // color except for svg node
-  if (!isSvgNode(node)) {
+  // color except for svg node and instance node
+  if (!isSvgNode(node) && !isInstanceNode(node)) {
     css += cssColorStyle(node)
   }
+  css += cssOpacity(node)
   // css += cssDebugBorder(node)
   css += '`\n'
   return css
