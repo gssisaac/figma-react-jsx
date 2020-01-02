@@ -519,7 +519,7 @@ function isImageNode(node) {
 function getTag(node) {
     let tag = 'div';
     if (node.type === 'TEXT') {
-        tag = 'div';
+        tag = 'span';
     }
     else if (isSvgNode(node)) {
         tag = 'div';

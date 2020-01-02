@@ -606,7 +606,7 @@ function isImageNode(node: SceneNode): boolean {
 function getTag(node: SceneNode): string {
   let tag = 'div'
   if (node.type === 'TEXT') {
-    tag = 'div'
+    tag = 'span'
   } else if (isSvgNode(node)) {
     tag = 'div'
   } else if (isImageNode(node)) {

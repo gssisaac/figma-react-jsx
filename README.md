@@ -1,5 +1,5 @@
 
-This plugin is for Figma to generate React hooks JSX and Styled components.
+# This plugin is for Figma to generate React hooks JSX and Styled components.
 
 1. Select nodes in Figma
 
@@ -10,9 +10,42 @@ This plugin is for Figma to generate React hooks JSX and Styled components.
 4. See results on consle and copy and use it
 
 
-`Using Props
+# Using Props by layer-naming
 
-``Using props by setting layer name in Figma like below
+
+## Trigger mouse hover, state, props
+
+```
+visible: hover-on
+visible: hover-off
+visible: state=showType
+```
+
+## props: `name` for Text node
+Just set layer name on Figma `LayerName$props:name`
+
+```
+AccountItem$props:accountName
+```
+
+The plugin generates codes `accountName: string` as props for Text element
+```
+type Props = {
+  accountName: string
+}
+
+function AccountItem(props: Props) {
+  return (
+    <Container>
+      <AccountItem>{props.accountName}</AccountItem>
+    </Container>
+  )
+}
+
+``` 
+
+
+# Using props by setting layer name in Figma like below
 
 ```
 PageNumber$props:pageIndex
