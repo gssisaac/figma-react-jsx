@@ -107,7 +107,7 @@ type ExtractProps = {
   onClickProp: string
 }
 
-function extractProps(node: SceneNode): ExtractProps {
+function extractPropsAll(node: SceneNode): ExtractProps {
   const { nodeName, params } = parseNodeName(node.name)
   let prop = null
   let onClick = ''
@@ -142,11 +142,35 @@ function extractProps(node: SceneNode): ExtractProps {
   return { prop, onClick, onClickProp }
 }
 
+function extractProps(params): string {
+  let prop = null
+  if (params) {
+    if (params.props) {
+      prop = params.props
+    }
+    if (prop) {
+      allProps.push(`${prop}: string`)
+    }
+  }
+  return prop
+}
+
+function extractVisible(params): string {
+  let value = null
+  if (params) {
+    if (params.visible) {
+      value = params.visible
+    }
+  }
+  return value
+}
+
 // rule
 /*
   visible
   $visible: prop=thumbnail
-  $visible: hover=MenuItem  #visible
+  $visible: hoverOn
+  $visible: hoverOff
   
   value
   $value: prop=MenuItem     #inside children
@@ -154,6 +178,9 @@ function extractProps(node: SceneNode): ExtractProps {
   props
   - put props inside props area
   $props: onClick=onTabClicked
+
+  hoverProvider:self
+  - self pover provider
   
   <ThumbnailImage onClick={props.onTabClicked}/>
 
@@ -166,44 +193,45 @@ function extractProps(node: SceneNode): ExtractProps {
   $style: hover=
 */
 
-function extractJsx(node: SceneNode, level: number, props: string) {
+function extractJsx(node: SceneNode, level: number, baseProps: string) {
   const tab = levelTab(level)
   let text = ''
 
   // const nodeName = clearName(node.name)
   const { nodeName, params } = parseNodeName(node.name)
-  const { prop, onClick, onClickProp } = extractProps(node)
+  const { prop, onClick, onClickProp } = extractPropsAll(node)
+  // const prop = extractProps(params)
   
 
   if (extractSvg(node)) {
     // text += `${tab}<${nodeName} src={SVG_${nodeName}}/>\n`
-    text += `${tab}<${nodeName}${props}${onClick}>\n`
+    text += `${tab}<${nodeName}${baseProps}${onClick}>\n`
     text += `${tab}  {SVG${nodeName}}\n`
     text += `${tab}</${nodeName}>\n`
     return text
   }
 
   if ((node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT') && node.children.length > 0) {
-    text += `${tab}<${nodeName}${props}${onClick}>\n`
+    text += `${tab}<${nodeName}${baseProps}${onClick}>\n`
     node.children.forEach(child => {
       text += extractJsx(child, level + 1, '')
     })
     text += `${tab}</${nodeName}>\n`
   } else if (node.type === 'TEXT') {
     if (prop) {
-      text += `${tab}<${nodeName}${props}${onClick}>{props.${prop}}</${nodeName}>\n`
+      text += `${tab}<${nodeName}${baseProps}${onClick}>{props.${prop}}</${nodeName}>\n`
     } else {
-      text += `${tab}<${nodeName}${props}${onClick}>${node.characters}</${nodeName}>\n`
+      text += `${tab}<${nodeName}${baseProps}${onClick}>${node.characters}</${nodeName}>\n`
     }
   } else if (isSvgNode(node)) {
-    text += `${tab}<${nodeName}${props}${onClick}/>\n`
+    text += `${tab}<${nodeName}${baseProps}${onClick}/>\n`
   } else if (isInstanceNode(node)) {
     if (!imports.find(name => name === nodeName)) {
       imports.push(nodeName)
     }
-    text += `${tab}<${nodeName}${props}${onClick}/>\n`
+    text += `${tab}<${nodeName}${baseProps}${onClick}/>\n`
   } else {
-    text += `${tab}<${nodeName}${props}${onClick}/>\n`
+    text += `${tab}<${nodeName}${baseProps}${onClick}/>\n`
   }
   return text
 }
@@ -467,15 +495,20 @@ function cssTextStyle(node: SceneNode): string {
     // wrapping
     css += `  white-space: nowrap;\n`
     css += `  overflow: hidden;\n`
-    // css += `  text-overflow: ellipsis;\n`
+    css += `  text-overflow: ellipsis;\n`
   }
   return css
 }
 
 function cssSize(node: SceneNode): string {
   let css = ''
-  if (node.type !== 'TEXT') {
-    // by default do not set width for text
+
+  let needWidth = true
+  if (node.type === 'TEXT' && isParentAutoLayout(node)) {
+    // by default do not set width for text, only parent is auto layout
+    needWidth = false
+  }
+  if (needWidth) {
     css += `  width: ${node.width}px;\n`
   }
   css += `  height: ${node.height}px;\n`
