@@ -544,11 +544,13 @@ function cssAutoLayoutItemSpacing(node): string{
   const lastOne = (children.length > 0 && children[children.length-1] === node)
   // Auto layout: item spacing to margin
   if (!lastOne) {
-    if (node.parent.layoutMode === 'HORIZONTAL') {
-      css += `  margin-right: ${node.parent.itemSpacing}px;\n`
-    }
-    if (node.parent.layoutMode === 'VERTICAL') {
-      css += `  margin-bottom: ${node.parent.itemSpacing}px;\n`
+    if (node.parent.itemSpacing > 0) {
+      if (node.parent.layoutMode === 'HORIZONTAL') {
+        css += `  margin-right: ${node.parent.itemSpacing}px;\n`
+      }
+      if (node.parent.layoutMode === 'VERTICAL') {
+        css += `  margin-bottom: ${node.parent.itemSpacing}px;\n`
+      }
     }
   }
 
