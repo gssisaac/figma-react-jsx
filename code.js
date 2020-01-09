@@ -70,12 +70,12 @@ function extractSvg(node) {
     // check SVG
     if ((node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'INSTANCE') && isSvgNode(node)) {
         let svg = '';
-        svg += `const SVG${nodeName} = <svg width="${node.width}" height="${node.height}" viewBox="0 0 ${node.width} ${node.width}" fill="none" xmlns="http://www.w3.org/2000/svg">\n`;
+        svg += `const SVG${nodeName} = <svg width='${node.width}' height='${node.height}' viewBox='0 0 ${node.width} ${node.width}' fill='none' xmlns='http://www.w3.org/2000/svg'>\n`;
         node.children.forEach(vector => {
             if (vector.type === 'VECTOR') {
                 const fillColor = getFillColor(vector);
                 vector.vectorPaths.forEach(data => {
-                    svg += `  <path d="${data.data}" transform="translate(${vector.x}, ${vector.y})" ${fillColor ? 'fill="' + fillColor + '"' : ''}/>\n`;
+                    svg += `  <path d='${data.data}' transform='translate(${vector.x}, ${vector.y})' ${fillColor ? `fill='${fillColor}'` : ''}/>\n`;
                 });
             }
         });
@@ -239,7 +239,7 @@ function parseNodeName(str) {
     return result;
 }
 figma.currentPage.selection.forEach(head => {
-    const text = extractJsx(head, 2, ' className={props.className}');
+    const text = extractJsx(head, 2, ' {...props}');
     let styledComponents = getCSSStyles(head, true);
     allNodes.forEach(node => {
         // console.log(`node[${node.name}]: `, node)
@@ -261,23 +261,21 @@ import React from 'react'
 import styled from 'styled-components'
 ${importsText}
 type Props = {
-  className: string
+  className?: string
 ${propsText}}
 
 function ${clearName(head.name)}Component(props: Props) {
-${funcsText}
-  return (
+${funcsText}  return (
 ${text}  )
 }
 
 // Styled components
 
-${styledComponents}
-export default ${clearName(head.name)}Component
+${styledComponents}export default ${clearName(head.name)}Component
 `;
     // console.log(jsx)
     totalText += jsx + '\n';
-    totalText += '// SVGS \n';
+    totalText += '// SVGS\n';
     for (const svg in allSvgs) {
         totalText += allSvgs[svg] + '\n';
     }
@@ -461,11 +459,13 @@ function cssAutoLayoutItemSpacing(node) {
     const lastOne = (children.length > 0 && children[children.length - 1] === node);
     // Auto layout: item spacing to margin
     if (!lastOne) {
-        if (node.parent.layoutMode === 'HORIZONTAL') {
-            css += `  margin-right: ${node.parent.itemSpacing}px;\n`;
-        }
-        if (node.parent.layoutMode === 'VERTICAL') {
-            css += `  margin-bottom: ${node.parent.itemSpacing}px;\n`;
+        if (node.parent.itemSpacing > 0) {
+            if (node.parent.layoutMode === 'HORIZONTAL') {
+                css += `  margin-right: ${node.parent.itemSpacing}px;\n`;
+            }
+            if (node.parent.layoutMode === 'VERTICAL') {
+                css += `  margin-bottom: ${node.parent.itemSpacing}px;\n`;
+            }
         }
     }
     // console.log(`node: ${node.name}, layout:${node.layoutAlign}`)

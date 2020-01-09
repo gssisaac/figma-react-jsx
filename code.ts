@@ -84,12 +84,12 @@ function extractSvg(node: SceneNode): boolean {
   // check SVG
   if ((node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'INSTANCE') && isSvgNode(node)) {
     let svg = ''
-    svg += `const SVG${nodeName} = <svg width="${node.width}" height="${node.height}" viewBox="0 0 ${node.width} ${node.width}" fill="none" xmlns="http://www.w3.org/2000/svg">\n`
+    svg += `const SVG${nodeName} = <svg width='${node.width}' height='${node.height}' viewBox='0 0 ${node.width} ${node.width}' fill='none' xmlns='http://www.w3.org/2000/svg'>\n`
     node.children.forEach(vector => {
       if (vector.type === 'VECTOR') {
         const fillColor = getFillColor(vector)
         vector.vectorPaths.forEach(data => {
-          svg += `  <path d="${data.data}" transform="translate(${vector.x}, ${vector.y})" ${fillColor ? 'fill="' + fillColor + '"' : ''}/>\n`
+          svg += `  <path d='${data.data}' transform='translate(${vector.x}, ${vector.y})' ${fillColor ? `fill='${fillColor}'` : ''}/>\n`
         })
       }
     })
@@ -279,7 +279,7 @@ function parseNodeName(str: string): ParsedNodeName {
 
 
 figma.currentPage.selection.forEach(head => {
-  const text = extractJsx(head, 2, ' className={props.className}')
+  const text = extractJsx(head, 2, ' {...props}')
 
   let styledComponents = getCSSStyles(head, true)
   
@@ -307,24 +307,22 @@ import React from 'react'
 import styled from 'styled-components'
 ${importsText}
 type Props = {
-  className: string
+  className?: string
 ${propsText}}
 
 function ${clearName(head.name)}Component(props: Props) {
-${funcsText}
-  return (
+${funcsText}  return (
 ${text}  )
 }
 
 // Styled components
 
-${styledComponents}
-export default ${clearName(head.name)}Component
+${styledComponents}export default ${clearName(head.name)}Component
 `
   // console.log(jsx)
   totalText += jsx + '\n'
 
-  totalText += '// SVGS \n'
+  totalText += '// SVGS\n'
   for (const svg in allSvgs) {
     totalText += allSvgs[svg] + '\n'
   }
@@ -335,6 +333,7 @@ export default ${clearName(head.name)}Component
 // })
 
 console.log(totalText)
+
 
 // const copytexts = <HTMLTextAreaElement>(document.createElement('textarea'))
 // document.body.appendChild(copytexts)
