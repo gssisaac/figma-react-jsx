@@ -1,13 +1,31 @@
 {
-    "name": "figma-react-jsx",
-    "productName": "figma-react-jsx",
-    "author": {
-        "name": "Isaac Chaneel Lee",
-        "email": "gssisaac@gmail.com"
-    },
-    "scripts": {
-        "start": "tsc -w"
-    },
-    "version": "0.1.1",
-    "license": "MIT"
+  "name": "figma-export-xml",
+  "version": "1.0.0",
+  "description": "export layers from figma",
+  "main": "./src/code.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx webpack --mode=production",
+    "dev": "npx webpack --mode=development --watch"
+  },
+  "author": "Isaac Chaneel Lee, Volodymyr Seleznov",
+  "email": "gssisaac@gmail.com",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jszip": "^3.1.7",
+    "css-loader": "^3.5.3",
+    "html-webpack-inline-source-plugin": "0.0.10",
+    "html-webpack-plugin": "^4.2.0",
+    "sass": "^1.26.5",
+    "sass-loader": "^8.0.2",
+    "style-loader": "^1.2.0",
+    "ts-loader": "^7.0.1",
+    "typescript": "^3.8.3",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11"
+  },
+  "dependencies": {
+    "jszip": "^3.4.0",
+    "xml-js": "^1.6.11"
+  }
 }

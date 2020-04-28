@@ -1,0 +1,103 @@
+<div id="export-xml-plugin">
+    <div id="export-xml-zip"></div>
+    <p>Selected layers</p>
+    <div id="export-xml-layers"></div>
+    <button id="export-xml-cancel">Close export</button>
+</div>
+
+<style>
+    #export-xml-plugin {
+        text-align: center;
+        padding: 20px;
+    }
+
+    #export-xml-plugin p {
+        margin: 40px 0 10px 0;
+    }
+
+    #export-xml-layers {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #export-xml-layers .layer {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #export-xml-layers .label {
+        width: 200px;
+        padding: 10px 0;
+        text-align: left;
+    }
+
+    #export-xml-layers a {
+        margin: 5px 50px;
+    }
+
+    #export-xml-cancel {
+        margin-top: 30px;
+    }
+
+    #export-xml-zip a {
+        margin-top: 20px;
+    }
+
+    #export-xml-zip a,
+    #export-xml-cancel,
+    #export-xml-layers a {
+        font-family:Arial, Helvetica, sans-serif;
+        font-size: 12px;
+        min-width: 60px;
+        border-radius: 5px;
+        border: solid 1px gray;
+        padding: 10px 20px;
+        color: black;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+    p {
+        font-family:Arial, Helvetica, sans-serif;
+        font-size: 12px;
+    }
+</style>
+
+<script>
+  const layers = document.getElementById('export-xml-layers')
+
+  parent.postMessage({ pluginMessage: { type: 'initialized' } }, '*')
+
+  onmessage = (event) => {
+    const message = event.data.pluginMessage
+    if (message.type === 'add-hooks') {
+      const layer = document.createElement('div')
+      layer.setAttribute('class', 'layer')
+      layers.appendChild(layer)
+
+      const label = document.createElement('div')
+      label.innerText = message.name
+      label.setAttribute('class', 'label')
+      layer.appendChild(label)
+
+      const link = document.createElement('a')
+      link.innerText = message.text
+      link.setAttribute('download', message.filename)
+      link.setAttribute('href', 'data:application/xml;base64,' + message.data)
+      layer.appendChild(link)
+    } else if (message.type === 'add-zip') {
+      const zipLink = document.createElement('a')
+      zipLink.innerText = message.text
+      zipLink.setAttribute('download', message.filename)
+      zipLink.setAttribute('href', 'data:application/zip;base64,' + message.data)
+      document.getElementById('export-xml-zip').appendChild(zipLink)
+    }
+  }
+
+  document.getElementById('export-xml-cancel').onclick = () => {
+    parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
+  }
+</script>

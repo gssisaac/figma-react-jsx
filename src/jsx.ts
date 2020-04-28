@@ -42,7 +42,7 @@ let allFunctions = []
 
 const allNodes: SceneNode[] = []
 
-function extractAllNodes(node: SceneNode) {
+export function extractJSX(node: SceneNode) {
   const found = allNodes.find(n => n.name === node.name)
   if (node.parent.type === 'INSTANCE' && !isSvgNode(node)) {
     return
@@ -53,14 +53,14 @@ function extractAllNodes(node: SceneNode) {
   if (node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT') {
     node.children.forEach((child) => {
       // console.log("child", child)
-      extractAllNodes(child)
+      extractJSX(child)
     })
   }
 }
 
-figma.currentPage.selection.forEach(node => {
-  extractAllNodes(node)
-})
+// figma.currentPage.selection.forEach(node => {
+//   extractAllNodes(node)
+// })
 
 // totalText += '// Styled components\n'
 
@@ -278,7 +278,7 @@ function parseNodeName(str: string): ParsedNodeName {
 }
 
 
-figma.currentPage.selection.forEach(head => {
+export function exportNode(head): string {
   const text = extractJsx(head, 2, ' {...props}')
 
   let styledComponents = getCSSStyles(head, true)
@@ -326,13 +326,14 @@ ${styledComponents}export default ${clearName(head.name)}Component
   for (const svg in allSvgs) {
     totalText += allSvgs[svg] + '\n'
   }
-})
 
-// allNodes.forEach(node => {
-//   console.log('node:', node)
-// })
+  // allNodes.forEach(node => {
+  //   console.log('node:', node)
+  // })
 
-console.log(totalText)
+  console.log(totalText)
+  return totalText
+}
 
 
 // const copytexts = <HTMLTextAreaElement>(document.createElement('textarea'))
@@ -345,7 +346,7 @@ console.log(totalText)
 
 // Make sure to close the plugin when you're done. Otherwise the plugin will
 // keep running, which shows the cancel button at the bottom of the screen.
-figma.closePlugin();
+// figma.closePlugin();
 
 
 
