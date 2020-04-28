@@ -1,6 +1,7 @@
 import * as JSZip from 'jszip'
 
-import { exportNode } from './jsx';
+import { exportReactHooksComponent } from './jsx';
+import { isContainer } from './utils';
 
 // import { js2xml } from 'xml-js'
 
@@ -32,16 +33,17 @@ figma.ui.onmessage = msg => {
       //   [layerName]: buildTree(node),
       // };
       // const xml = js2xml(tree, { compact: true, spaces: 2, fullTagEmptyElement: true });
-
-      const data = exportNode(node)
-      messages.push({
-        type: 'add-hooks',
-        name: layerName,
-        filename: layerName + '.tsx',
-        raw_data: data,
-        text: `Export`,
-        data: Buffer.from(data).toString('base64'),
-      })
+      if (isContainer(node)) {
+      const data = exportReactHooksComponent(node)
+        messages.push({
+          type: 'add-hooks',
+          name: layerName,
+          filename: layerName + '.tsx',
+          raw_data: data,
+          text: `Export`,
+          data: Buffer.from(data).toString('base64'),
+        })
+      }
     })
 
     messages.forEach(message => {

@@ -71,6 +71,14 @@
 
   parent.postMessage({ pluginMessage: { type: 'initialized' } }, '*')
 
+  function copyToClipboard() {
+    var copyText = document.createElement("input")
+    copyText.select()
+    copyText.setSelectionRange(0, 99999)
+    document.execCommand("copy")
+    alert("Copied the text: " + copyText.value)
+  }
+
   onmessage = (event) => {
     const message = event.data.pluginMessage
     if (message.type === 'add-hooks') {
@@ -94,6 +102,7 @@
       zipLink.setAttribute('download', message.filename)
       zipLink.setAttribute('href', 'data:application/zip;base64,' + message.data)
       document.getElementById('export-xml-zip').appendChild(zipLink)
+    } else if (message.type === 'report-errors') {
     }
   }
 
