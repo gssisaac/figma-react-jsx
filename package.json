@@ -8,9 +8,9 @@
     "build": "npx webpack --mode=production",
     "dev": "npx webpack --mode=development --watch"
   },
-  "author": "Isaac Chaneel Lee, Volodymyr Seleznov",
+  "author": "Isaac Chaneel Lee",
   "email": "gssisaac@gmail.com",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/jszip": "^3.1.7",
     "css-loader": "^3.5.3",
