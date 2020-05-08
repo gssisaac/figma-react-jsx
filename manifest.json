@@ -1,6 +1,7 @@
 {
-  "name": "figma-react-jsx",
-  "id": "790455967480835763",
+  "name": "Figma-react-hooks-export",
+  "id": "835477638473350025",
   "api": "1.0.0",
-  "main": "code.js"
+  "main": "dist/code.js",
+  "ui": "dist/ui.html"
 }
