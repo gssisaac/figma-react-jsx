@@ -1,5 +1,4 @@
-import { getFillColor, rgbToHex, isSvgNode, clearName } from "./utils"
-
+import { clearName, getButtonType, getFillColor, isButton, isSvgNode, rgbToHex } from "./utils"
 
 export function cssColorStyle(node: SceneNode): string {
   let css = ''
@@ -39,7 +38,7 @@ export function cssFrameStyle(node: SceneNode): string {
    if (fills.length > 0) {
      fills.forEach(fill => {
        if (fill.type === 'SOLID') {
-         css += `  background: ${rgbToHex(fill.color)};\n`
+         css += `  background: ${rgbToHex(fill.color)} !important;\n`
        }
      })
    }
@@ -292,6 +291,18 @@ export function isInstanceNode(node: SceneNode) {
   return node.type === 'INSTANCE' && !isSvgNode(node)
 }
 
+export function cssActiveForButton() {
+  return `  &:active {
+    filter: brightness(80%) !important;
+  };`
+}
+
+export function cssHoverForButton() {
+  return `&:hover {
+    filter: brightness(90%)
+  };`
+}
+
 // get css for a node
 export function getCSSStyles(node: SceneNode, isHead: boolean): string {
   let css = ''
@@ -303,7 +314,12 @@ export function getCSSStyles(node: SceneNode, isHead: boolean): string {
   }
 
   const nodeName = clearName(node.name)
-  if (isInstanceNode(node)) {
+  if (isButton(nodeName)) {
+    const buttonType = getButtonType(nodeName)
+    css += `const ${nodeName} = styled(${buttonType})` + "`\n"
+    css += cssActiveForButton()
+    css += cssHoverForButton()
+  } else if (isInstanceNode(node)) {
     css += `const ${nodeName} = styled(${nodeName}Component)` + "`\n"
   } else {
     css += `const ${nodeName} = styled.${getTag(node)}` + "`\n"
