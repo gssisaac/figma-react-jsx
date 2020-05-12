@@ -110,26 +110,28 @@ export function cssTextStyle(node: SceneNode): string {
     // // if not auto layout, we set specific width and height
 
     let styles = ''
-    fontName.style.split(' ').forEach(style => {
-      styles += FONTWEIGHT[style] ? FONTWEIGHT[style] : style
-      styles += ' '
-    })
+    if (fontName.style) {
+      fontName.style.split(' ').forEach(style => {
+        styles += FONTWEIGHT[style] ? FONTWEIGHT[style] : style
+        styles += ' '
+      })
 
-    const lineHeight = <LineHeight>(node.lineHeight)
-    let lineHeightCss = ''
-    if (lineHeight.unit === 'PERCENT') {
-      lineHeightCss = `/${Number(lineHeight.value)}%`
-    } else if (lineHeight.unit === 'PIXELS') {
-      lineHeightCss = `/${Number(lineHeight.value)}px`
+      const lineHeight = <LineHeight>(node.lineHeight)
+      let lineHeightCss = ''
+      if (lineHeight.unit === 'PERCENT') {
+        lineHeightCss = `/${Number(lineHeight.value)}%`
+      } else if (lineHeight.unit === 'PIXELS') {
+        lineHeightCss = `/${Number(lineHeight.value)}px`
+      }
+
+      // one line
+      css += `  font: ${styles}${Number(node.fontSize)}px${lineHeightCss} ${fontName.family};\n`
+
+      // wrapping
+      css += `  white-space: nowrap;\n`
+      css += `  overflow: hidden;\n`
+      css += `  text-overflow: ellipsis;\n`
     }
-
-    // one line
-    css += `  font: ${styles}${Number(node.fontSize)}px${lineHeightCss} ${fontName.family};\n`
-
-    // wrapping
-    css += `  white-space: nowrap;\n`
-    css += `  overflow: hidden;\n`
-    css += `  text-overflow: ellipsis;\n`
   }
   return css
 }
