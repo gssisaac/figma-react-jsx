@@ -2,6 +2,22 @@
 export function isSvgNode(node: SceneNode) {
   return (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') && node.children.find(child => child.type === 'VECTOR')
 }
+
+
+const buttonList = ['BasicButton', 'IconButton']
+
+export const isButton = (name: string) => {
+  return name.includes('Button')
+}
+
+export const getButtonType = (name: string) => {
+  if (name.includes('IconButton')) {
+    return 'IconButton'
+  } else {
+    return 'BasicButton'
+  }
+}
+
   
 export function componentToHex(c) {
   const v = Math.round(c * 255)
