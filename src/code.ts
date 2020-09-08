@@ -1,6 +1,6 @@
 import * as JSZip from 'jszip'
 
-import { exportReactHooksComponent } from './jsx';
+import { exportReactHooksComponent } from './reactBuilder'
 import { isContainer } from './utils';
 
 // import { js2xml } from 'xml-js'

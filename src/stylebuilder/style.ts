@@ -1,4 +1,5 @@
-import { clearName, getButtonType, getFillColor, isButton, isSvgNode, rgbToHex } from "./utils"
+import { getFillColor, rgbToHex } from "../utils"
+import { isParentAutoLayout, isSvgNode } from "../identification"
 
 export function cssColorStyle(node: SceneNode): string {
   let css = ''
@@ -76,17 +77,6 @@ export function cssFrameStyle(node: SceneNode): string {
 }
 
 export function cssTextStyle(node: SceneNode): string {
-  const ALIGNVERTICAL = {
-    CNETER: 'middle',
-    TOP: 'flex-start',
-    BOTTOM: 'flex-end',
-  }
-  const ALIGNHORIZONTAL = {
-    CNETER: 'center',
-    LEFT: 'left',
-    RIGHT: 'right',
-    JUSTIFIED: 'justify',
-  }
   const FONTWEIGHT = {
     Light: '200',
     Regular: 'normal',
@@ -148,28 +138,6 @@ export function cssSize(node: SceneNode): string {
   }
   css += `  height: ${node.height}px;\n`
   return css
-}
-
-
-export function isAutoLayout(node: SceneNode): boolean {
-  if (!node) {
-    return false
-  }
-  if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
-    if (node.layoutMode === 'HORIZONTAL' || node.layoutMode === 'VERTICAL') {
-      return true
-    }
-  }
-  return false
-}
-
-export function isParentAutoLayout(node: SceneNode): boolean {
-  if (node.parent && (node.parent.type === 'FRAME' || node.parent.type === 'INSTANCE' || node.parent.type === 'COMPONENT')) {
-    if (node.parent.layoutMode === 'HORIZONTAL' || node.parent.layoutMode === 'VERTICAL') {
-      return true
-    }
-  }
-  return false
 }
 
 export function cssAutoLayoutItemSpacing(node): string{
@@ -260,121 +228,8 @@ export function cssAutoLayout(node: SceneNode): string {
 //   }
 // }
 
-export function isImageNode(node: SceneNode): boolean {
-  let image = false
-  if (node.type === 'RECTANGLE') {
-    const fills = <Paint[]>(node.fills)
-    fills.forEach(fill => {
-      if (fill.type === 'IMAGE') {
-        image = true
-      }
-    })
-  }
-  return image
-}
+// export function cssComment(comment: string) {
+//   return `  /* ${comment} */\n`
+// }
 
-export function getTag(node: SceneNode): string {
-  let tag = 'div'
-  if (node.type === 'TEXT') {
-    tag = 'span'
-  } else if (isSvgNode(node)) {
-    tag = 'div'
-  } else if (isImageNode(node)) {
-    tag = 'img'
-  }
-  return tag
-}
 
-export function cssComment(comment: string) {
-  return `  /* ${comment} */\n`
-}
-
-export function isInstanceNode(node: SceneNode) {
-  return node.type === 'INSTANCE' && !isSvgNode(node)
-}
-
-// get css for a node
-export function getCSSStyles(node: SceneNode, isHead: boolean): string {
-  let css = ''
-  if (!node) {
-    return ''
-  }
-  if (node.type == 'VECTOR') {
-    return ''
-  }
-
-  const nodeName = clearName(node.name)
-  if (isButton(nodeName)) {
-    const buttonType = getButtonType(nodeName)
-    css += `const ${nodeName} = styled(${buttonType})` + "`\n"
-  } else if (isInstanceNode(node)) {
-    css += `const ${nodeName} = styled(${nodeName}Component)` + "`\n"
-  } else {
-    css += `const ${nodeName} = styled.${getTag(node)}` + "`\n"
-  }
-
-  // if head, we set size
-  if (isHead) {
-    css += cssComment('Head')
-  } else if (isParentAutoLayout(node)) {
-    css += cssAutoLayoutItemSpacing(node)
-  } else {
-    css += cssSize(node)
-    css += cssComment('Constraints')
-    css += cssConstraints(node)
-  }
-
-  // if container
-  if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
-    if (isAutoLayout(node)) {
-      css += cssComment('Auto layout')
-      css += cssAutoLayout(node)
-      if (isHead) {      
-        css += cssSize(node)
-        css += cssPosition('relative')
-      } else if (isParentAutoLayout(node)) {
-      } else {
-        css += cssPosition('absolute')
-      }
-    } else {
-      if (isHead) {      
-        css += cssSize(node)
-        css += cssPosition('relative')
-      } else if (isParentAutoLayout(node)) {
-        css += cssSize(node)
-        css += cssPosition('relative')
-      } else {
-        // console.log(`${node.name} is Frame, and parent ${node.parent.name} is Frame`)
-        css += cssPosition('absolute')
-      }
-    }
-    css += cssFrameStyle(node)
-  } else { // leaf node
-    if (isHead) {      
-      css += cssSize(node)
-      css += cssPosition('relative')
-    } else if (isParentAutoLayout(node)) {
-      css += cssSize(node)
-    } else {
-      css += cssPosition('absolute')
-    }
-
-    // get specific styles
-    if (node.type === 'TEXT') {
-      css += cssTextStyle(node)
-    }
-  }
-
-  // color except for svg node and instance node
-  if (!isSvgNode(node) && !isInstanceNode(node)) {
-    css += cssColorStyle(node)
-  }
-  css += cssOpacity(node)
-  // css += cssDebugBorder(node)
-  css += '`\n'
-  return css
-}
-
-export function cssDebugBorder(node) {
-  return `  border: 0.2px solid red;\n`
-}
