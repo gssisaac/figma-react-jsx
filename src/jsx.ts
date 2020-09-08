@@ -1,4 +1,4 @@
-import { clearName, getButtonType, getFillColor, isButton, isSvgNode } from './utils'
+import { clearName, getFillColor, isSvgNode } from './utils'
 import { getCSSStyles, isInstanceNode } from './style'
 
 type SvgType = {
@@ -6,7 +6,6 @@ type SvgType = {
 }
 type Refer = {
   imports: string[]
-  importLines: string[]
   allProps: string[]
   allFunctions: string[]
   allSvgs: SvgType
@@ -153,40 +152,6 @@ function extractJsx(refer: Refer, node: SceneNode, level: number, baseProps: str
   const { prop, onClick, onClickProp } = extractPropsAll(refer, node)
   // const prop = extractProps(params)
 
-  if (isButton(nodeName)) {
-    const buttonType = getButtonType(nodeName)
-    console.log(buttonType)
-    const importLiteral = `import { ${buttonType} } from \'app/filetalk/common/Buttons\'`
-    const path = 'app/filetalk/common/Buttons'
-    
-    let isImported = false
-    for (let i = 0; i < refer.importLines.length; i++) {
-      const importLine = refer.importLines[i]
-      if (importLine.includes(path)){
-        const importedButtons = importLine.substring(importLine.lastIndexOf('{') + 1, importLine.lastIndexOf('}')).split(',')
-        const trimed = importedButtons.map(button => button.trim())
-        let importedString = ''
-        if (!trimed.includes(buttonType)) {
-          trimed.push(buttonType)
-        }
-        console.log(trimed)
-        for (let j = 0; j < trimed.length; j++) {
-          importedString += trimed[j]
-          if (j !== trimed.length - 1) {
-            importedString += ', '
-          }
-        }
-        refer.importLines[i] = `import { ${importedString} } from \'app/filetalk/common/Buttons\'`
-        isImported = true
-      }
-    }
-
-    if (!isImported) {
-      refer.importLines.push(importLiteral)
-    }
-  }
-  
-
   if (extractSvg(refer, node)) {
     // text += `${tab}<${nodeName} src={SVG_${nodeName}}/>\n`
     text += `${tab}<${nodeName}${baseProps}${onClick}>\n`
@@ -255,7 +220,6 @@ export function exportReactHooksComponent(head): string {
   let totalText = ''  
   const refer: Refer = {
     imports: [],
-    importLines: [],
     allProps: [],
     allFunctions: [],
     allSvgs: {},
@@ -284,8 +248,6 @@ export function exportReactHooksComponent(head): string {
   let importsText = ''
   refer.imports.forEach(nodeName => importsText += `import ${nodeName}Component from './${nodeName}'\n`)
 
-  refer.importLines.forEach(text => importsText += `${text}\n`)
-  
   let propsText = ''
   refer.allProps.forEach(prop => propsText += `  ${prop}\n`)
 

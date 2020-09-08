@@ -293,18 +293,6 @@ export function isInstanceNode(node: SceneNode) {
   return node.type === 'INSTANCE' && !isSvgNode(node)
 }
 
-export function cssActiveForButton() {
-  return `  &:active {
-    filter: brightness(80%) !important;
-  };`
-}
-
-export function cssHoverForButton() {
-  return `&:hover {
-    filter: brightness(90%)
-  };`
-}
-
 // get css for a node
 export function getCSSStyles(node: SceneNode, isHead: boolean): string {
   let css = ''
@@ -319,8 +307,6 @@ export function getCSSStyles(node: SceneNode, isHead: boolean): string {
   if (isButton(nodeName)) {
     const buttonType = getButtonType(nodeName)
     css += `const ${nodeName} = styled(${buttonType})` + "`\n"
-    css += cssActiveForButton()
-    css += cssHoverForButton()
   } else if (isInstanceNode(node)) {
     css += `const ${nodeName} = styled(${nodeName}Component)` + "`\n"
   } else {

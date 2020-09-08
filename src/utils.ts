@@ -4,8 +4,6 @@ export function isSvgNode(node: SceneNode) {
 }
 
 
-const buttonList = ['BasicButton', 'IconButton']
-
 export const isButton = (name: string) => {
   return name.includes('Button')
 }
@@ -18,7 +16,6 @@ export const getButtonType = (name: string) => {
   }
 }
 
-  
 export function componentToHex(c) {
   const v = Math.round(c * 255)
   var hex = v.toString(16);
