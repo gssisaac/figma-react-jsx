@@ -151,9 +151,12 @@ export function cssAutoLayoutItemSpacing(node): string{
       if (node.parent.layoutMode === 'HORIZONTAL') {
         css += `  margin-right: ${node.parent.itemSpacing}px;\n`
       }
-      if (node.parent.layoutMode === 'VERTICAL') {
-        css += `  margin-bottom: ${node.parent.itemSpacing}px;\n`
-      }
+
+      //!  Flex Container: gap property 
+      // if (node.parent.layoutMode === 'VERTICAL') { 
+      //   css += `  margin-bottom: ${node.parent.itemSpacing}px;\n`
+      // }
+
     }
   }
 
@@ -174,33 +177,34 @@ export function cssAutoLayoutItemSpacing(node): string{
 
 export function cssConstraints(node): string {
   let css = ''
-  if (node.constraints) {
-    const { vertical, horizontal } = node.constraints
-    switch (horizontal) {
-      case 'MIN':
-        css += `  left: ${node.x}px;\n`;
-        break
-      case 'CENTER':
-      case 'SCALE':
-            css += `  left: calc(50% - ${node.width}px/2);\n`;
-        break
-      case 'MAX':
-        css += `  right: ${node.parent.width - (node.width + node.x)}px;\n`;
-        break
-    }
-    switch (vertical) {
-      case 'MIN':
-        css += `  top: ${node.y}px;\n`;
-        break
-      case 'SCALE':
-      case 'CENTER':
-        css += `  top: calc(50% - ${node.height}px/2);\n`;
-        break
-      case 'MAX':
-        css += `  bottom: ${node.parent.height - (node.height + node.y)}px;\n`;
-        break
-    }
-  }
+  //! flex container: center
+  // if (node.constraints) {
+  //   const { vertical, horizontal } = node.constraints
+  //   switch (horizontal) {
+  //     case 'MIN':
+  //       css += `  left: ${node.x}px;\n`;
+  //       break
+  //     case 'CENTER':
+  //     case 'SCALE':
+  //           css += `  left: calc(50% - ${node.width}px/2);\n`;
+  //       break
+  //     case 'MAX':
+  //       css += `  right: ${node.parent.width - (node.width + node.x)}px;\n`;
+  //       break
+  //   }
+  //   switch (vertical) {
+  //     case 'MIN':
+  //       css += `  top: ${node.y}px;\n`;
+  //       break
+  //     case 'SCALE':
+  //     case 'CENTER':
+  //       css += `  top: calc(50% - ${node.height}px/2);\n`;
+  //       break
+  //     case 'MAX':
+  //       css += `  bottom: ${node.parent.height - (node.height + node.y)}px;\n`;
+  //       break
+  //   }
+  // }
   return css
 }
 

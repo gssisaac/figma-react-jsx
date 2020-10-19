@@ -6,6 +6,7 @@ import { isSvgNode } from '../identification'
 
 export function exportReactHooksComponent(head): string {
   let totalText = ''  
+  //! import { } from 'ui-pack'
   const refer: Refer = {
     imports: [],
     allProps: [],
@@ -15,7 +16,7 @@ export function exportReactHooksComponent(head): string {
 
   const allContainers: SceneNode[] = []
   searchAllContainers(allContainers, head)
-  // console.log({ allContainers })
+  console.log({ allContainers })
 
   const text = buildJsx(refer, head, 2, ' {...props}')
 

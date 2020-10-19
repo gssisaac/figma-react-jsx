@@ -1,4 +1,4 @@
-import { isInstanceNode, isSvgNode } from '../identification'
+import { isAutoLayout, isInstanceNode, isSvgNode } from '../identification'
 
 import { Refer } from './types'
 import { buildSVG } from './svgbuilder'
@@ -86,6 +86,17 @@ function extractPropsAll(refer: Refer, node: SceneNode): ExtractProps {
 export function checkError(node: SceneNode) {
 }
 
+const enum CompNames {
+  //* Container
+  FlexRow = 'FlexRow', 
+  FlexColumn = 'FlexColumn',
+
+  //* Text
+  TitleText = 'TitleText',
+  SubTitleText = 'SubTitleText',
+  DescriptionText = 'DescriptionText',
+}
+
 export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps: string) {
   const tab = levelTab(level)
   let text = ''
@@ -102,6 +113,54 @@ export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps
     text += `${tab}</${nodeName}>\n`
     return text
   }
+  if (isAutoLayout(node)) {
+    if (!node) return false
+    let compName = ''
+    if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT' ) {
+      if (node.layoutMode === 'HORIZONTAL') {
+        compName = CompNames.FlexRow
+      } else if (node.layoutMode === 'VERTICAL') {
+        compName = CompNames.FlexColumn
+      }
+
+      if (!refer.imports.find((name) => name === compName)) {
+        refer.imports.push(compName) 
+      }
+      
+      let compProps = '' 
+      
+      //* gap
+      if (node.itemSpacing) {
+        compProps += ` gap={'${node.itemSpacing}px'} `
+      } 
+      //* align
+      if (node.children) {
+        let itemsCenter: boolean = true 
+
+        node.children.forEach((child) => {
+          if (child.type !== 'SLICE' && child.type !== 'BOOLEAN_OPERATION' && child.type !== 'GROUP'){
+            const { vertical, horizontal } = child.constraints
+            const contraint = compName === CompNames.FlexRow ? vertical : horizontal
+            if (contraint !== 'CENTER' && contraint !== 'SCALE') {
+              itemsCenter = false 
+            } 
+          }
+        })
+        compProps += itemsCenter ? ` center` : ``
+      }
+      
+      //* wrap,full,background,minheight
+
+      text += `${tab}<${compName}${baseProps}${compProps}${onClick}>\n`    
+      node.children.forEach(child => {
+        text += buildJsx(refer, child, level + 1, '')
+      })
+      text += `${tab}</${compName}>\n`
+      
+    }
+    return text
+  }
+
   if ((node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT') && node.children.length > 0) {
     text += `${tab}<${nodeName}${baseProps}${onClick}>\n`
     node.children.forEach(child => {
@@ -112,8 +171,47 @@ export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps
     if (prop) {
       text += `${tab}<${nodeName}${baseProps}${onClick}>{props.${prop}}</${nodeName}>\n`
     } else {
-      text += `${tab}<${nodeName}${baseProps}${onClick}>${node.characters}</${nodeName}>\n`
+      let compNames = ''
+      let compProps = ' '
+      switch (node.fontSize) {
+        case 16: 
+          compNames = CompNames.TitleText
+          break;
+        case 15: case 14:
+          compNames = CompNames.SubTitleText
+          break;
+        case 13:
+          compNames = CompNames.DescriptionText
+          break;
+        default:
+          // compNames = CompNames.SubTitleText
+          break;
+      }
+
+      const fontName = <FontName>(node.fontName)
+
+      console.log('font name style: ', fontName.style)
+      //* bold
+      if (fontName.style) {
+        fontName.style.split(' ').forEach(style => {
+          if (style === 'Bold') {
+            compProps += 'bold '
+          }
+        })
+      }
+
+      //* ellipsis
+      compProps += 'ellipsis '
+      
+      //* sub
+      // font color 
+
+      //* selectable 
+
+      text += `${tab}<${compNames}${baseProps}${compProps}${onClick}>${node.characters}</${compNames}>\n`
     }
+
+
   } else if (isSvgNode(node)) {
     text += `${tab}<${nodeName}${baseProps}${onClick}/>\n`
   } else if (isInstanceNode(node)) {

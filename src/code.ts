@@ -35,14 +35,15 @@ figma.ui.onmessage = msg => {
       // const xml = js2xml(tree, { compact: true, spaces: 2, fullTagEmptyElement: true });
       if (isContainer(node)) {
       const data = exportReactHooksComponent(node)
-        messages.push({
+        const message = {
           type: 'add-hooks',
           name: layerName,
           filename: layerName + '.tsx',
           raw_data: data,
           text: `Export`,
           data: Buffer.from(data).toString('base64'),
-        })
+        }
+        messages.push(message)
       }
     })
 
