@@ -1,4 +1,3 @@
-import { CompNames, getFillColor } from '../utils'
 import { isAutoLayout, isInstanceNode, isSvgNode } from '../identification'
 
 import { Refer } from './types'

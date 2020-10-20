@@ -1,5 +1,5 @@
 import { clearName, getButtonType } from "../utils"
-import { cssAutoLayout, cssColorStyle, cssConstraints, cssFrameStyle, cssLayoutAlign, cssOpacity, cssPosition, cssSize, cssTextStyle } from "./style"
+import { cssColorStyle, cssFrameStyle, cssLayoutAlign, cssOpacity, cssPosition, cssSize } from "./style"
 import { getTag, isAutoLayout, isButton, isInstanceNode, isParentAutoLayout, isSvgNode } from "../identification"
 
 // get css for a node
@@ -20,7 +20,7 @@ export function buildStyledComponent(node: SceneNode, isHead: boolean, compName?
   if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
     if (isAutoLayout(node)) {
       // css += cssComment('Auto layout')
-      css += cssAutoLayout(node)
+      // css += cssAutoLayout(node)
       if (isHead) {      
         css += cssSize(node)
         css += cssPosition('relative')

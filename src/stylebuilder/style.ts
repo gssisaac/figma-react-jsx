@@ -31,7 +31,22 @@ export function cssOpacity(node): string {
   return css
 }
 
+
 //TODO: theme provider
+function themeColor(color: string): string {
+  let code = color.toUpperCase()
+  const colorCodes = {
+    '#FFFFFF': 'white',
+    '#4397E5': 'primary'
+  }
+
+  if (code in colorCodes) {
+    code += '${({ theme }) => theme.colors.' + colorCodes[code] + '}'
+  }
+
+  return code 
+}
+
 export function cssFrameStyle(node: SceneNode): string {
   let css = ''
   if ((node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') && !isSvgNode(node)) {
@@ -42,7 +57,7 @@ export function cssFrameStyle(node: SceneNode): string {
        if (fill.type === 'SOLID') {
          const color = rgbToHex(fill.color).toUpperCase()
          console.log(color)
-         css += `  background: ${color} !important;\n`
+         css += `  background: ${themeColor(color)} !important;\n`
        }
      })
    }
@@ -67,54 +82,6 @@ export function cssFrameStyle(node: SceneNode): string {
   return css
 }
 
-export function cssTextStyle(node: SceneNode): string {
-  const FONTWEIGHT = {
-    Light: '200',
-    Regular: 'normal',
-    Medium: '600',
-    Bold: 'bold',
-    Black: '800',
-  }
-  
-  let css = ''
-  if (node.type === 'TEXT') {
-   
-    const fontName = <FontName>(node.fontName)
-    // css += `  font-size: ${Number(node.fontSize)}px;\n`;
-    // css += fontName.family ?`  font-family: ${fontName.family};\n`: ''
-    // css += FONTWEIGHT[fontName.style] ? `  font-weight: ${FONTWEIGHT[fontName.style]};\n`: ''
-    // css += ALIGNHORIZONTAL[node.textAlignHorizontal] ? `  text-align: ${ALIGNHORIZONTAL[node.textAlignHorizontal]};\n`: ''
-    // css += ALIGNVERTICAL[node.textAlignVertical] ? `  vertical-align: ${ALIGNVERTICAL[node.textAlignVertical]};\n`: ''
-    // css += node.letterSpacing ? `  letter-spacing: ${<LetterSpacing>(node.letterSpacing)}em;\n`: ''
-    
-    // if not auto layout, we set specific width and height
-
-    let styles = ''
-    if (fontName.style) {
-      fontName.style.split(' ').forEach(style => {
-        styles += FONTWEIGHT[style] ? FONTWEIGHT[style] : style
-        styles += ' '
-      })
-
-      const lineHeight = <LineHeight>(node.lineHeight)
-      let lineHeightCss = ''
-      if (lineHeight.unit === 'PERCENT') {
-        lineHeightCss = `/${Number(lineHeight.value)}%`
-      } else if (lineHeight.unit === 'PIXELS') {
-        lineHeightCss = `/${Number(lineHeight.value)}px`
-      }
-
-      // one line
-      css += `  font: ${styles}${Number(node.fontSize)}px${lineHeightCss} ${fontName.family};\n`
-
-      // wrapping
-      css += `  white-space: nowrap;\n`
-      css += `  overflow: hidden;\n`
-      css += `  text-overflow: ellipsis;\n`
-    }
-  }
-  return css
-}
 
 export function cssSize(node: SceneNode): string {
   let css = ''
@@ -138,7 +105,7 @@ const LAYOUTALIGN = {
   MAX: 'flex-end',
 }
 
-export function cssLayoutAlign(node): string{
+export function cssLayoutAlign(node): string {
   let css = ''
   //alignment
   if (node.layoutAlign in LAYOUTALIGN) {
@@ -152,19 +119,61 @@ export function cssPosition(position: string): string {
   return `  position: ${position};\n`;  
 }
 
-export function cssAutoLayout(node: SceneNode): string {
-  let css = ''
-  // if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
-  //   // Auto layout
-  //   css += `  display: flex;\n`
-  //   if (node.layoutMode === 'HORIZONTAL') {
-  //     css += `  flex-direction: row;\n`
-  //   } else if (node.layoutMode === 'VERTICAL') {
-  //     css += `  flex-direction: column;\n`
-  //   }
-  // }
-  return css
-}
+
+// export function cssTextStyle(node: SceneNode): string {
+//   const FONTWEIGHT = {
+//     Light: '200',
+//     Regular: 'normal',
+//     Medium: '600',
+//     Bold: 'bold',
+//     Black: '800',
+//   }
+  
+//   let css = ''
+//   if (node.type === 'TEXT') {
+   
+//     const fontName = <FontName>(node.fontName)
+
+//     let styles = ''
+//     if (fontName.style) {
+//       fontName.style.split(' ').forEach(style => {
+//         styles += FONTWEIGHT[style] ? FONTWEIGHT[style] : style
+//         styles += ' '
+//       })
+
+//       const lineHeight = <LineHeight>(node.lineHeight)
+//       let lineHeightCss = ''
+//       if (lineHeight.unit === 'PERCENT') {
+//         lineHeightCss = `/${Number(lineHeight.value)}%`
+//       } else if (lineHeight.unit === 'PIXELS') {
+//         lineHeightCss = `/${Number(lineHeight.value)}px`
+//       }
+
+//       // one line
+//       css += `  font: ${styles}${Number(node.fontSize)}px${lineHeightCss} ${fontName.family};\n`
+
+//       // wrapping
+//       css += `  white-space: nowrap;\n`
+//       css += `  overflow: hidden;\n`
+//       css += `  text-overflow: ellipsis;\n`
+//     }
+//   }
+//   return css
+// }
+
+// export function cssAutoLayout(node: SceneNode): string {
+//   let css = ''
+//   if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
+//     // Auto layout
+//     css += `  display: flex;\n`
+//     if (node.layoutMode === 'HORIZONTAL') {
+//       css += `  flex-direction: row;\n`
+//     } else if (node.layoutMode === 'VERTICAL') {
+//       css += `  flex-direction: column;\n`
+//     }
+//   }
+//   return css
+// }
 
 // export function containerNode(node: SceneNode): ContainerNode {
 //   if (node.type in CONTAINER_NODES) {
@@ -178,9 +187,9 @@ export function cssAutoLayout(node: SceneNode): string {
 
 
 
-export function cssConstraints(node): string {
-  let css = ''
-  //! flex container: center
+// export function cssConstraints(node): string {
+//   let css = ''
+//   //! flex container: center
   // if (node.constraints) {
   //   const { vertical, horizontal } = node.constraints
   //   switch (horizontal) {
@@ -208,5 +217,5 @@ export function cssConstraints(node): string {
   //       break
   //   }
   // }
-  return css
-}
+//   return css
+// }
