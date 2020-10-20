@@ -4,9 +4,10 @@ import { buildStyledComponent } from '../stylebuilder'
 import { clearName } from '../utils'
 import { isSvgNode } from '../identification'
 
+const UI_PACK_COMPONENT = ['FlexColumn', 'FlexRow']
 export function exportReactHooksComponent(head): string {
   let totalText = ''  
-  //! import { } from 'ui-pack'
+  
   const refer: Refer = {
     imports: [],
     allProps: [],
@@ -35,7 +36,15 @@ export function exportReactHooksComponent(head): string {
   // console.log({ styledComponents })
 
   let importsText = ''
-  refer.imports.forEach(nodeName => importsText += `import ${nodeName}Component from './${nodeName}'\n`)
+  const uiPack = refer.imports.filter((nodeName) => {
+    if ( UI_PACK_COMPONENT.includes(nodeName) ) {
+      return true 
+    }
+    importsText += `import ${nodeName}Component from './${nodeName}'\n`
+    return false
+  })
+
+  importsText +=`import { ${uiPack.join(', ')} } from '@modules/ui-pack'\n`
 
   let propsText = ''
   refer.allProps.forEach(prop => propsText += `  ${prop}\n`)
