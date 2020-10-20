@@ -31,6 +31,7 @@ export function cssOpacity(node): string {
   return css
 }
 
+//TODO: theme provider
 export function cssFrameStyle(node: SceneNode): string {
   let css = ''
   if ((node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') && !isSvgNode(node)) {
@@ -39,39 +40,29 @@ export function cssFrameStyle(node: SceneNode): string {
    if (fills.length > 0) {
      fills.forEach(fill => {
        if (fill.type === 'SOLID') {
-         css += `  background: ${rgbToHex(fill.color)} !important;\n`
+         const color = rgbToHex(fill.color).toUpperCase()
+         console.log(color)
+         css += `  background: ${color} !important;\n`
        }
      })
    }
 
-   //radius
-   //border-radius: 5px;
-   if (typeof(node.cornerRadius) === 'number') {
-     if (node.cornerRadius > 0) {
-       css += `  border-radius: ${node.cornerRadius}px;\n`
-     }
-   } else {
-     if (node.topLeftRadius
-       && node.topRightRadius
-       && node.bottomRightRadius
-       && node.bottomLeftRadius) {
-       css += `  border-radius: ${node.topLeftRadius}px ${node.topRightRadius}px ${node.bottomRightRadius}px ${node.bottomLeftRadius}px;\n`
-     }
-   }
-
-   // add padding
-  //  if (node.verticalPadding) {
-  //    css += `  padding-top: ${node.verticalPadding}px;\n`
-  //    css += `  padding-bottom: ${node.verticalPadding}px;\n`
-  //  }
-  //  if (node.horizontalPadding) {
-  //    css += `  padding-left: ${node.horizontalPadding}px;\n`
-  //    css += `  padding-right: ${node.horizontalPadding}px;\n`
-  //  }
-
-   if (node.verticalPadding || node.horizontalPadding) {
-    css += `  padding: ${node.verticalPadding}px ${node.horizontalPadding}px;\n`
-  }
+    //radius .. border-radius: 5px;
+    if (typeof(node.cornerRadius) === 'number') {
+      if (node.cornerRadius > 0) {
+        css += `  border-radius: ${node.cornerRadius}px;\n`
+      }
+    } else {
+      if (node.topLeftRadius
+        && node.topRightRadius
+        && node.bottomRightRadius
+        && node.bottomLeftRadius) {
+        css += `  border-radius: ${node.topLeftRadius}px ${node.topRightRadius}px ${node.bottomRightRadius}px ${node.bottomLeftRadius}px;\n`
+      }
+    }
+    if (node.verticalPadding || node.horizontalPadding) {
+      css += `  padding: ${node.verticalPadding}px ${node.horizontalPadding}px;\n`
+    }
   }
   return css
 }
@@ -94,9 +85,9 @@ export function cssTextStyle(node: SceneNode): string {
     // css += FONTWEIGHT[fontName.style] ? `  font-weight: ${FONTWEIGHT[fontName.style]};\n`: ''
     // css += ALIGNHORIZONTAL[node.textAlignHorizontal] ? `  text-align: ${ALIGNHORIZONTAL[node.textAlignHorizontal]};\n`: ''
     // css += ALIGNVERTICAL[node.textAlignVertical] ? `  vertical-align: ${ALIGNVERTICAL[node.textAlignVertical]};\n`: ''
-    // // css += node.letterSpacing ? `  letter-spacing: ${<LetterSpacing>(node.letterSpacing)}em;\n`: ''
+    // css += node.letterSpacing ? `  letter-spacing: ${<LetterSpacing>(node.letterSpacing)}em;\n`: ''
     
-    // // if not auto layout, we set specific width and height
+    // if not auto layout, we set specific width and height
 
     let styles = ''
     if (fontName.style) {
@@ -140,40 +131,52 @@ export function cssSize(node: SceneNode): string {
   return css
 }
 
-export function cssAutoLayoutItemSpacing(node): string{
+
+const LAYOUTALIGN = {
+  CENTER: 'center',
+  MIN: 'flex-start',
+  MAX: 'flex-end',
+}
+
+export function cssLayoutAlign(node): string{
   let css = ''
-  // except for last child
-  const children = node.parent.children
-  const lastOne = (children.length > 0 && children[children.length-1] === node)
-  // Auto layout: item spacing to margin
-  if (!lastOne) {
-    if (node.parent.itemSpacing > 0) {
-      if (node.parent.layoutMode === 'HORIZONTAL') {
-        css += `  margin-right: ${node.parent.itemSpacing}px;\n`
-      }
-
-      //!  Flex Container: gap property 
-      // if (node.parent.layoutMode === 'VERTICAL') { 
-      //   css += `  margin-bottom: ${node.parent.itemSpacing}px;\n`
-      // }
-
-    }
-  }
-
-  // console.log(`node: ${node.name}, layout:${node.layoutAlign}`)
-
   //alignment
-  const LAYOUTALIGN = {
-    CENTER: 'center',
-    MIN: 'flex-start',
-    MAX: 'flex-end',
-  }
   if (node.layoutAlign in LAYOUTALIGN) {
     css += `  align-self: ${LAYOUTALIGN[node.layoutAlign]};\n`
   }
-  // console.log('css:', css)
   return css
 }
+
+
+export function cssPosition(position: string): string {
+  return `  position: ${position};\n`;  
+}
+
+export function cssAutoLayout(node: SceneNode): string {
+  let css = ''
+  // if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
+  //   // Auto layout
+  //   css += `  display: flex;\n`
+  //   if (node.layoutMode === 'HORIZONTAL') {
+  //     css += `  flex-direction: row;\n`
+  //   } else if (node.layoutMode === 'VERTICAL') {
+  //     css += `  flex-direction: column;\n`
+  //   }
+  // }
+  return css
+}
+
+// export function containerNode(node: SceneNode): ContainerNode {
+//   if (node.type in CONTAINER_NODES) {
+//     return <ContainerNode>(node)
+//   }
+// }
+
+// export function cssComment(comment: string) {
+//   return `  /* ${comment} */\n`
+// }
+
+
 
 export function cssConstraints(node): string {
   let css = ''
@@ -207,33 +210,3 @@ export function cssConstraints(node): string {
   // }
   return css
 }
-
-export function cssPosition(position: string): string {
-  return `  position: ${position};\n`;  
-}
-
-export function cssAutoLayout(node: SceneNode): string {
-  let css = ''
-  if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
-    // Auto layout
-    css += `  display: flex;\n`
-    if (node.layoutMode === 'HORIZONTAL') {
-      css += `  flex-direction: row;\n`
-    } else if (node.layoutMode === 'VERTICAL') {
-      css += `  flex-direction: column;\n`
-    }
-  }
-  return css
-}
-
-// export function containerNode(node: SceneNode): ContainerNode {
-//   if (node.type in CONTAINER_NODES) {
-//     return <ContainerNode>(node)
-//   }
-// }
-
-// export function cssComment(comment: string) {
-//   return `  /* ${comment} */\n`
-// }
-
-

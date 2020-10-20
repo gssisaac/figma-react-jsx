@@ -4,6 +4,7 @@ import { isAutoLayout, isInstanceNode, isSvgNode } from '../identification'
 import { Refer } from './types'
 import { buildFlexContainerBuilder } from './flexContainerBuilder'
 import { buildSVG } from './svgbuilder'
+import { buildStyledComponent } from '../stylebuilder'
 import { buildText } from './textBuilder'
 import { parseNodeName } from './nodeNameParser'
 
@@ -89,7 +90,11 @@ function extractPropsAll(refer: Refer, node: SceneNode): ExtractProps {
 export function checkError(node: SceneNode) {
 }
 
+/*
 
+* SPAContainer
+* 
+*/
 export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps: string) {
   const tab = levelTab(level)
   let text = ''
@@ -110,7 +115,16 @@ export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps
   
   if (isAutoLayout(node)) {
     if (!node) return false
-      const [compName, compProps] = buildFlexContainerBuilder(node) 
+      let [compName, compProps] = buildFlexContainerBuilder(node) 
+      const styled = buildStyledComponent(node, level === 2, compName)
+        
+      addReferStyledComponent(refer, styled)
+      addReferImports(refer, compName)
+
+      compName = styled.length 
+        ? (level === 2 ? 'Container' : nodeName)
+        : compName
+      
       if (compName) {
         if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT' ) {
           text += `${tab}<${compName}${baseProps}${compProps}${onClick}>\n`    
@@ -119,8 +133,6 @@ export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps
           })
           text += `${tab}</${compName}>\n`
         }
-        
-        addReferImports(refer, compName)
       }
     return text
   }
@@ -133,6 +145,7 @@ export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps
     text += `${tab}</${nodeName}>\n`
   } else if (node.type === 'TEXT') {
     const [compName, compProps] = buildText(node)
+    addReferImports(refer, compName)
     text += `${tab}<${compName}${baseProps}${compProps}${onClick}>${node.characters}</${compName}>\n`  
   } else if (isInstanceNode(node)) {
     addReferImports(refer, nodeName)
@@ -151,3 +164,6 @@ function addReferImports(refer: Refer, compName: string){
   }
 }
 
+function addReferStyledComponent(refer: Refer, styled: string){
+  refer.styledComponent.push(styled)
+}

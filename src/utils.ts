@@ -1,5 +1,5 @@
 
-export const enum CompNames {
+export enum CompNames {
   //* Container
   FlexRow = 'FlexRow', 
   FlexColumn = 'FlexColumn',
@@ -32,7 +32,7 @@ export function rgbToHex(color) {
 }
 
 // export function getFillColor(node: FrameNode | TextNode | ComponentNode | VectorNode) {
-export function getFillColor(node: any) {
+export function getFillColor(node: any): string {
   if (!node.fills) {
     return null
   }

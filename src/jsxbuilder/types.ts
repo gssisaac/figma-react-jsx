@@ -8,4 +8,5 @@ export type Refer = {
   allProps: string[]
   allFunctions: string[]
   allSvgs: SvgType
+  styledComponent: string[]
 }

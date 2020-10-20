@@ -17,7 +17,7 @@ export function buildText(node: TextNode) {
       // compNames = CompNames.SubTitleText
       break;
   }
-  
+
   //* bold
   const fontName = <FontName>(node.fontName)
   if (fontName.style) {
@@ -29,14 +29,15 @@ export function buildText(node: TextNode) {
   }
   
   //* font color
-  switch (getFillColor(node)) {
-    case '#FFFFF': case 'white':
+  const color = getFillColor(node).toUpperCase()
+  switch (color) {
+    case '#FFFFFF': case 'white':
       compProps += 'white '
       break
     case '#828282':
       compProps += 'sub '
       break
-    default: 
+    default:
       break
   }
 
