@@ -97,7 +97,7 @@ export function cssSize(node: SceneNode): string {
 
 
 const LAYOUTALIGN = {
-  CENTER: 'center',
+  // CENTER: 'center',
   MIN: 'flex-start',
   MAX: 'flex-end',
 }
@@ -113,7 +113,8 @@ export function cssLayoutAlign(node): string {
 
 
 export function cssPosition(position: string): string {
-  return `  position: ${position};\n`;  
+  // return `  position: ${position};\n`;  
+  return '  ${relative.position}'
 }
 
 

@@ -1,7 +1,6 @@
 import { COMP_NAMES } from '../config'
 import { Refer } from '../jsxbuilder/types'
 import { buildJsx } from '../jsxbuilder/jsx'
-import { buildStyledComponent } from '../stylebuilder'
 import { clearName } from '../utils'
 import { isSvgNode } from '../identification'
 
