@@ -119,7 +119,7 @@ export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps
         
       addReferStyledComponent(refer, styled)
       addReferImports(refer, compName)
-
+      
       compName = styled.length 
         ? (level === 2 ? 'Container' : nodeName)
         : compName

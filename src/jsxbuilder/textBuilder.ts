@@ -1,17 +1,29 @@
-import { CompNames, getFillColor } from "../utils";
+import { COMP_NAMES } from "../config";
+import { getFillColor } from "../utils";
+
+const enum TextColor {
+  white = '#FFFFFF',
+  sub = '#828282',
+}
 
 export function buildText(node: TextNode) {
   let compName = ''
   let compProps = ' '
   switch (node.fontSize) {
     case 16: 
-      compName = CompNames.TitleText
+      compName = COMP_NAMES.TitleText
       break;
     case 15: case 14:
-      compName = CompNames.SubTitleText
+      compName = COMP_NAMES.SubTitleText
       break;
     case 13:
-      compName = CompNames.DescriptionText
+      compName = COMP_NAMES.DescriptionText
+      break;
+    case 12: case 11:
+      compName = COMP_NAMES.SmallInfoText
+      break;
+    case 10:
+      compName = COMP_NAMES.SmallDescriptionText
       break;
     default:
       // compNames = CompNames.SubTitleText
@@ -31,10 +43,10 @@ export function buildText(node: TextNode) {
   //* font color
   const color = getFillColor(node).toUpperCase()
   switch (color) {
-    case '#FFFFFF': case 'white':
+    case TextColor.white: 
       compProps += 'white '
       break
-    case '#828282':
+    case TextColor.sub:
       compProps += 'sub '
       break
     default:

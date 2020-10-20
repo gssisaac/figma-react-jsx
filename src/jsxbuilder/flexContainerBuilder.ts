@@ -1,8 +1,7 @@
-import { CompNames } from "../utils"
-import { Refer } from "./types"
+import { COMP_NAMES } from "../config"
 
 function getLayoutMode(node): string {
-  return node.layoutMode === 'HORIZONTAL' ? CompNames.FlexRow : CompNames.FlexColumn
+  return node.layoutMode === 'HORIZONTAL' ? COMP_NAMES.FlexRow : COMP_NAMES.FlexColumn
 }
 
 
@@ -23,7 +22,7 @@ export function buildFlexContainerBuilder(node: SceneNode) {
       node.children.forEach((child) => {
         if (child.type !== 'SLICE' && child.type !== 'BOOLEAN_OPERATION' && child.type !== 'GROUP'){
           const { vertical, horizontal } = child.constraints
-          const contraint = compName === CompNames.FlexRow ? vertical : horizontal
+          const contraint = compName === COMP_NAMES.FlexRow ? vertical : horizontal
           if (contraint !== 'CENTER' && contraint !== 'SCALE') {
             itemsCenter = false 
           } 

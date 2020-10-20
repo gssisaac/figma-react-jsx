@@ -1,15 +1,10 @@
 import { getFillColor, rgbToHex } from "../utils"
 import { isParentAutoLayout, isSvgNode } from "../identification"
+import { COLOR_CODES } from "../config"
 
 export function cssColorStyle(node: SceneNode): string {
   let css = ''
-  if (node.type === 'TEXT') {
-    const fillColor = getFillColor(node)
-    if (fillColor) {
-      css += `  color: ${fillColor};\n`
-    }
-  }
-  
+
   if (node.type === 'TEXT' || node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT' || node.type === 'RECTANGLE') {
     // Stroke color
     if (node.strokes.length > 0) {      
@@ -35,13 +30,10 @@ export function cssOpacity(node): string {
 //TODO: theme provider
 function themeColor(color: string): string {
   let code = color.toUpperCase()
-  const colorCodes = {
-    '#FFFFFF': 'white',
-    '#4397E5': 'primary'
-  }
 
-  if (code in colorCodes) {
-    code += '${({ theme }) => theme.colors.' + colorCodes[code] + '}'
+
+  if (code in COLOR_CODES) {
+    code = '${({ theme }) => theme.colors.' + COLOR_CODES[code] + '}'
   }
 
   return code 
@@ -62,10 +54,14 @@ export function cssFrameStyle(node: SceneNode): string {
      })
    }
 
-    //radius .. border-radius: 5px;
+    //radius .. border-radius 
     if (typeof(node.cornerRadius) === 'number') {
       if (node.cornerRadius > 0) {
-        css += `  border-radius: ${node.cornerRadius}px;\n`
+        if (node.cornerRadius === 4) {
+          css += '  ${borders.radius}\n'
+        } else {
+          css += `  border-radius: ${node.cornerRadius}px;\n`
+        }
       }
     } else {
       if (node.topLeftRadius
@@ -75,6 +71,7 @@ export function cssFrameStyle(node: SceneNode): string {
         css += `  border-radius: ${node.topLeftRadius}px ${node.topRightRadius}px ${node.bottomRightRadius}px ${node.bottomLeftRadius}px;\n`
       }
     }
+
     if (node.verticalPadding || node.horizontalPadding) {
       css += `  padding: ${node.verticalPadding}px ${node.horizontalPadding}px;\n`
     }

@@ -1,11 +1,10 @@
-import { CompNames, clearName } from '../utils'
-
+import { COMP_NAMES } from '../config'
 import { Refer } from '../jsxbuilder/types'
 import { buildJsx } from '../jsxbuilder/jsx'
 import { buildStyledComponent } from '../stylebuilder'
+import { clearName } from '../utils'
 import { isSvgNode } from '../identification'
 
-const UI_PACK_COMPONENT = ['FlexColumn', 'FlexRow']
 export function exportReactHooksComponent(head): string {
   let totalText = ''  
   
@@ -23,22 +22,11 @@ export function exportReactHooksComponent(head): string {
 
   const text = buildJsx(refer, head, 2, ' {...props}')
 
-  let styledComponents = refer.styledComponent.join('/n')
-  // let styledComponents = buildStyledComponent(head, true)
-  // allContainers.forEach(node => {
-  //   // console.log(`node[${node.name}]: `, node)
-  //   if (node !== head) {
-  //     const text = buildStyledComponent(node, false)
-  //     if (text) {
-  //       styledComponents += text + '\n'
-  //     }
-  //   }
-  // })
-  // console.log({ styledComponents })
+  let styledComponents = refer.styledComponent.join('\n')
 
   let importsText = ''
   const uiPack = refer.imports.filter((nodeName) => {
-    if (Object.keys(CompNames).includes(nodeName)) {
+    if (Object.keys(COMP_NAMES).includes(nodeName)) {
       return true 
     }
     importsText += `import ${nodeName}Component from './${nodeName}'\n`

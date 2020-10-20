@@ -1,18 +1,4 @@
 
-export enum CompNames {
-  //* Container
-  FlexRow = 'FlexRow', 
-  FlexColumn = 'FlexColumn',
-
-  //* Text
-  TitleText = 'TitleText',
-  SubTitleText = 'SubTitleText',
-  DescriptionText = 'DescriptionText',
-
-  //* Icon
-  Icon = 'Icon'
-}
-
 export const getButtonType = (name: string) => {
   if (name.includes('IconButton')) {
     return 'IconButton'
