@@ -90,9 +90,9 @@ export function checkError(node: SceneNode) {
 }
 
 /*
-
 * SPAContainer
-* 
+* Button
+* Container
 */
 export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps: string) {
   const tab = levelTab(level)
@@ -111,37 +111,31 @@ export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps
     } else console.log('** [Error] buildJsx SVG ')
     return text
   }
-  
-  if (isAutoLayout(node)) {
-    if (!node) return false
-      let [compName, compProps] = buildFlexContainerBuilder(node) 
-      const styled = buildStyledComponent(node, level, compName)
-        
-      addReferStyledComponent(refer, styled)
+
+  if ((node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT' || node.type === 'INSTANCE') && node.children.length > 0) {
+    let compName = nodeName 
+    let compProps = ''
+    if (isAutoLayout(node)) {
+      [compName, compProps] = buildFlexContainerBuilder(node) 
+    }
+    
+    const styled = buildStyledComponent(node, level, compName)
+    addReferStyledComponent(refer, styled)
+    compName = styled.length ? (level === 2 ? 'Container' : nodeName) : compName
+
+    if (compName !== nodeName) {
       addReferImports(refer, compName)
-      
-      compName = styled.length 
-        ? (level === 2 ? 'Container' : nodeName)
-        : compName
-      
-      if (compName) {
-        if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT' ) {
-          text += `${tab}<${compName}${baseProps}${compProps}${onClick}>\n`    
-          node.children.forEach(child => {
-            text += buildJsx(refer, child, level + 1, '')
-          })
-          text += `${tab}</${compName}>\n`
-        }
-      }
+    }
+
+    if (compName) {
+      text += `${tab}<${compName}${baseProps}${compProps}${onClick}>\n`    
+      node.children.forEach(child => {
+        text += buildJsx(refer, child, level + 1, '')
+      })
+      text += `${tab}</${compName}>\n`
+    }
+
     return text
-  }
-  
-  if ((node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT') && node.children.length > 0) {
-    text += `${tab}<${nodeName}${baseProps}${onClick}>\n`
-    node.children.forEach(child => {
-      text += buildJsx(refer, child, level + 1, '')
-    })
-    text += `${tab}</${nodeName}>\n`
   } else if (node.type === 'TEXT') {
     let [compName, compProps] = buildText(node)
     const styled = buildStyledComponent(node, level, compName)
@@ -151,12 +145,10 @@ export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps
     compName = styled.length ? nodeName : compName
     
     text += `${tab}<${compName}${baseProps}${compProps}${onClick}>${node.characters}</${compName}>\n`  
-  } else if (isInstanceNode(node)) {
-    addReferImports(refer, nodeName)
-    text += `${tab}<${nodeName}${baseProps}${onClick}/>\n`  
   } else {
     text += `${tab}<${nodeName}${baseProps}${onClick}/>\n`
-  }
+  } 
+  
 
   return text
 }
@@ -169,5 +161,33 @@ function addReferImports(refer: Refer, compName: string){
 }
 
 function addReferStyledComponent(refer: Refer, styled: string){
+  if (styled.length === 0) return 
   refer.styledComponent.push(styled)
 }
+
+// if (isAutoLayout(node)) {
+//   // if (!node) return false
+//   let [compName, compProps] = buildFlexContainerBuilder(node) 
+//   const styled = buildStyledComponent(node, level, compName)
+    
+//   addReferStyledComponent(refer, styled)
+//   addReferImports(refer, compName)
+  
+//   compName = styled.length ? (level === 2 ? 'Container' : nodeName) : compName
+  
+//   if (compName) {
+//     if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT' ) {
+//       text += `${tab}<${compName}${baseProps}${compProps}${onClick}>\n`    
+//       node.children.forEach(child => {
+//         text += buildJsx(refer, child, level + 1, '')
+//       })
+//       text += `${tab}</${compName}>\n`
+//     }
+//   }
+//   return text
+// }
+
+// else if (isInstanceNode(node)) {
+//   addReferImports(refer, nodeName)
+//   text += `${tab}<${nodeName}${baseProps}${onClick}/>\n`  
+// } 
