@@ -108,14 +108,14 @@ export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps
       text += `${tab}<Icon${sizeProps}>{SVG${nodeName}}</Icon>\n`
 
       addReferImports(refer, 'Icon')
-    } else console.log('** [Error]: buildJsx -> isSvgNode ')
+    } else console.log('** [Error] buildJsx SVG ')
     return text
   }
   
   if (isAutoLayout(node)) {
     if (!node) return false
       let [compName, compProps] = buildFlexContainerBuilder(node) 
-      const styled = buildStyledComponent(node, level === 2, compName)
+      const styled = buildStyledComponent(node, level, compName)
         
       addReferStyledComponent(refer, styled)
       addReferImports(refer, compName)
@@ -143,8 +143,13 @@ export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps
     })
     text += `${tab}</${nodeName}>\n`
   } else if (node.type === 'TEXT') {
-    const [compName, compProps] = buildText(node)
+    let [compName, compProps] = buildText(node)
+    const styled = buildStyledComponent(node, level, compName)
+        
+    addReferStyledComponent(refer, styled)
     addReferImports(refer, compName)
+    compName = styled.length ? nodeName : compName
+    
     text += `${tab}<${compName}${baseProps}${compProps}${onClick}>${node.characters}</${compName}>\n`  
   } else if (isInstanceNode(node)) {
     addReferImports(refer, nodeName)

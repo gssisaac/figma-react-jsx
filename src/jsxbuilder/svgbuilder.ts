@@ -11,6 +11,7 @@ export function buildSVG(refer: Refer, node: SceneNode): [number, number] {
     return [node.width, node.height]
   }
   const nodeName = clearName(node.name)
+  console.log({nodeName})
   // check SVG
   if ((node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'INSTANCE') && isSvgNode(node)) {
     let svg = ''

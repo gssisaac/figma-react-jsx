@@ -3,7 +3,9 @@ import { cssColorStyle, cssFrameStyle, cssLayoutAlign, cssOpacity, cssPosition, 
 import { getTag, isAutoLayout, isButton, isInstanceNode, isParentAutoLayout, isSvgNode } from "../identification"
 
 // get css for a node
-export function buildStyledComponent(node: SceneNode, isHead: boolean, compName?: string): string {
+export function buildStyledComponent(node: SceneNode, level: number, compName?: string): string {
+  const isHead = level === 2 
+  
   let css = ''
   if (!node) {
     return ''
@@ -30,7 +32,7 @@ export function buildStyledComponent(node: SceneNode, isHead: boolean, compName?
         css += cssPosition('relative')
       }
       
-    css += cssFrameStyle(node)
+      css += cssFrameStyle(node)
     } else {
       css += cssLayoutAlign(node)
       css += cssSize(node)
@@ -52,7 +54,10 @@ export function buildStyledComponent(node: SceneNode, isHead: boolean, compName?
   if (css.length > 0) {
     if (isHead && compName) {
       css = `const Container = styled(${compName})` + "`\n" + css
-    } else if (isButton(nodeName)) {
+    } else if (compName !== nodeName) {
+      css = `const ${nodeName} = styled(${compName})` + "`\n" + css
+    }
+    else if (isButton(nodeName)) {
       const buttonType = getButtonType(nodeName)
       css = `const ${nodeName} = styled(${buttonType})` + "`\n" + css
     } else if (isInstanceNode(node)) {

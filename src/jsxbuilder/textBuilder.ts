@@ -8,7 +8,7 @@ const enum TextColor {
 
 export function buildText(node: TextNode) {
   let compName = ''
-  let compProps = ' '
+  let compProps = ''
   switch (node.fontSize) {
     case 16: 
       compName = COMP_NAMES.TitleText
@@ -35,7 +35,7 @@ export function buildText(node: TextNode) {
   if (fontName.style) {
     fontName.style.split(' ').forEach(style => {
       if (style === 'Bold') {
-        compProps += 'bold '
+        compProps += ' bold'
       }
     })
   }
@@ -44,10 +44,10 @@ export function buildText(node: TextNode) {
   const color = getFillColor(node).toUpperCase()
   switch (color) {
     case TextColor.white: 
-      compProps += 'white '
+      compProps += ' white'
       break
     case TextColor.sub:
-      compProps += 'sub '
+      compProps += ' sub'
       break
     default:
       break

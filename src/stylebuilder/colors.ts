@@ -7,3 +7,4 @@ export const colors = {
   light: '#D2EAFF',
   white: '#FFFFFF',
 }
+//! Local Paint Styles

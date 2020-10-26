@@ -83,15 +83,16 @@ export function cssFrameStyle(node: SceneNode): string {
 export function cssSize(node: SceneNode): string {
   let css = ''
 
-  let needWidth = true
-  if (node.type === 'TEXT' && isParentAutoLayout(node)) {
-    // by default do not set width for text, only parent is auto layout
-    needWidth = false
+  if (node.type !== 'TEXT') {
+    if (!isParentAutoLayout(node)) {
+      css += `  width: ${node.width}px;\n`
+    }
+    css += `  height: ${node.height}px;\n`
   }
-  if (needWidth) {
-    css += `  width: ${node.width}px;\n`
-  }
-  css += `  height: ${node.height}px;\n`
+
+  // if (node.type !== 'TEXT') {
+  //   css += `  height: ${node.height}px;\n`
+  // }
   return css
 }
 
@@ -114,7 +115,7 @@ export function cssLayoutAlign(node): string {
 
 export function cssPosition(position: string): string {
   // return `  position: ${position};\n`;  
-  return '  ${relative.position}'
+  return '  ${relative.position}\n'
 }
 
 
