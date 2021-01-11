@@ -1,7 +1,10 @@
-import { isInstanceNode, isSvgNode } from '../identification'
+import { isAutoLayout, isInstanceNode, isSvgNode } from '../identification'
 
 import { Refer } from './types'
+import { buildFlexContainerBuilder } from './flexContainerBuilder'
 import { buildSVG } from './svgbuilder'
+import { buildStyledComponent } from '../stylebuilder'
+import { buildText } from './textBuilder'
 import { parseNodeName } from './nodeNameParser'
 
 function levelTab(level: number) {
@@ -86,44 +89,105 @@ function extractPropsAll(refer: Refer, node: SceneNode): ExtractProps {
 export function checkError(node: SceneNode) {
 }
 
+/*
+* SPAContainer
+* Button
+* Container
+*/
 export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps: string) {
   const tab = levelTab(level)
   let text = ''
 
-  // const nodeName = clearName(node.name)
   const { nodeName } = parseNodeName(node.name)
   const { prop, onClick } = extractPropsAll(refer, node)
-  // const prop = extractProps(params)
 
-  if (buildSVG(refer, node)) {
-    // text += `${tab}<${nodeName} src={SVG_${nodeName}}/>\n`
-    text += `${tab}<${nodeName}${baseProps}${onClick}>\n`
-    text += `${tab}  {SVG${nodeName}}\n`
-    text += `${tab}</${nodeName}>\n`
+  if (isSvgNode(node)) {
+    const [ width, height ] = buildSVG(refer, node)
+    if (width && height) {
+      const sizeProps = ` width={${width}} height={${height}}`
+      text += `${tab}<Icon${sizeProps}>{SVG${nodeName}}</Icon>\n`
+
+      addReferImports(refer, 'Icon')
+    } else console.log('** [Error] buildJsx SVG ')
     return text
   }
-  if ((node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT') && node.children.length > 0) {
-    text += `${tab}<${nodeName}${baseProps}${onClick}>\n`
-    node.children.forEach(child => {
-      text += buildJsx(refer, child, level + 1, '')
-    })
-    text += `${tab}</${nodeName}>\n`
+
+  if ((node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT' || node.type === 'INSTANCE') && node.children.length > 0) {
+    let compName = nodeName 
+    let compProps = ''
+    if (isAutoLayout(node)) {
+      [compName, compProps] = buildFlexContainerBuilder(node) 
+    }
+    
+    const styled = buildStyledComponent(node, level, compName)
+    addReferStyledComponent(refer, styled)
+    compName = styled.length ? (level === 2 ? 'Container' : nodeName) : compName
+
+    if (compName !== nodeName) {
+      addReferImports(refer, compName)
+    }
+
+    if (compName) {
+      text += `${tab}<${compName}${baseProps}${compProps}${onClick}>\n`    
+      node.children.forEach(child => {
+        text += buildJsx(refer, child, level + 1, '')
+      })
+      text += `${tab}</${compName}>\n`
+    }
+
+    return text
   } else if (node.type === 'TEXT') {
-    if (prop) {
-      text += `${tab}<${nodeName}${baseProps}${onClick}>{props.${prop}}</${nodeName}>\n`
-    } else {
-      text += `${tab}<${nodeName}${baseProps}${onClick}>${node.characters}</${nodeName}>\n`
-    }
-  } else if (isSvgNode(node)) {
-    text += `${tab}<${nodeName}${baseProps}${onClick}/>\n`
-  } else if (isInstanceNode(node)) {
-    if (!refer.imports.find(name => name === nodeName)) {
-      refer.imports.push(nodeName)
-    }
-    text += `${tab}<${nodeName}${baseProps}${onClick}/>\n`
+    let [compName, compProps] = buildText(node)
+    const styled = buildStyledComponent(node, level, compName)
+        
+    addReferStyledComponent(refer, styled)
+    addReferImports(refer, compName)
+    compName = styled.length ? nodeName : compName
+    
+    text += `${tab}<${compName}${baseProps}${compProps}${onClick}>${node.characters}</${compName}>\n`  
   } else {
     text += `${tab}<${nodeName}${baseProps}${onClick}/>\n`
-  }
+  } 
+  
+
   return text
 }
 
+
+function addReferImports(refer: Refer, compName: string){
+  if (!refer.imports.find((name) => name === compName)) {
+    refer.imports.push(compName) 
+  }
+}
+
+function addReferStyledComponent(refer: Refer, styled: string){
+  if (styled.length === 0) return 
+  refer.styledComponent.push(styled)
+}
+
+// if (isAutoLayout(node)) {
+//   // if (!node) return false
+//   let [compName, compProps] = buildFlexContainerBuilder(node) 
+//   const styled = buildStyledComponent(node, level, compName)
+    
+//   addReferStyledComponent(refer, styled)
+//   addReferImports(refer, compName)
+  
+//   compName = styled.length ? (level === 2 ? 'Container' : nodeName) : compName
+  
+//   if (compName) {
+//     if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT' ) {
+//       text += `${tab}<${compName}${baseProps}${compProps}${onClick}>\n`    
+//       node.children.forEach(child => {
+//         text += buildJsx(refer, child, level + 1, '')
+//       })
+//       text += `${tab}</${compName}>\n`
+//     }
+//   }
+//   return text
+// }
+
+// else if (isInstanceNode(node)) {
+//   addReferImports(refer, nodeName)
+//   text += `${tab}<${nodeName}${baseProps}${onClick}/>\n`  
+// } 

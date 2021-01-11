@@ -1,9 +1,11 @@
 import { clearName, getButtonType } from "../utils"
-import { cssAutoLayout, cssAutoLayoutItemSpacing, cssColorStyle, cssConstraints, cssFrameStyle, cssOpacity, cssPosition, cssSize, cssTextStyle } from "./style"
+import { cssColorStyle, cssFrameStyle, cssLayoutAlign, cssOpacity, cssPosition, cssSize } from "./style"
 import { getTag, isAutoLayout, isButton, isInstanceNode, isParentAutoLayout, isSvgNode } from "../identification"
 
 // get css for a node
-export function buildStyledComponent(node: SceneNode, isHead: boolean): string {
+export function buildStyledComponent(node: SceneNode, level: number, compName?: string): string {
+  const isHead = level === 2 
+  
   let css = ''
   if (!node) {
     return ''
@@ -12,75 +14,64 @@ export function buildStyledComponent(node: SceneNode, isHead: boolean): string {
     return ''
   }
 
-  const nodeName = clearName(node.name)
-  if (isButton(nodeName)) {
-    const buttonType = getButtonType(nodeName)
-    css += `const ${nodeName} = styled(${buttonType})` + "`\n"
-  } else if (isInstanceNode(node)) {
-    css += `const ${nodeName} = styled(${nodeName}Component)` + "`\n"
-  } else {
-    css += `const ${nodeName} = styled.${getTag(node)}` + "`\n"
-  }
-
   // if head, we set size
+   if (isParentAutoLayout(node)) {
+  } 
+
   if (isHead) {
-    // css += cssComment('Head')
-  } else if (isParentAutoLayout(node)) {
-    css += cssAutoLayoutItemSpacing(node)
-  } else {
     css += cssSize(node)
-    // css += cssComment('Constraints')
-    css += cssConstraints(node)
-  }
-
-  // if container
-  if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
-    if (isAutoLayout(node)) {
-      // css += cssComment('Auto layout')
-      css += cssAutoLayout(node)
-      if (isHead) {      
-        css += cssSize(node)
-        css += cssPosition('relative')
-      } else if (isParentAutoLayout(node)) {
-      } else {
-        css += cssPosition('absolute')
-      }
-    } else {
-      if (isHead) {      
-        css += cssSize(node)
-        css += cssPosition('relative')
-      } else if (isParentAutoLayout(node)) {
-        css += cssSize(node)
-        css += cssPosition('relative')
-      } else {
-        // console.log(`${node.name} is Frame, and parent ${node.parent.name} is Frame`)
-        css += cssPosition('absolute')
-      }
-    }
+    css += cssPosition('relative')
     css += cssFrameStyle(node)
-  } else { // leaf node
-    if (isHead) {      
-      css += cssSize(node)
-      css += cssPosition('relative')
-    } else if (isParentAutoLayout(node)) {
-      css += cssSize(node)
+  } else if (isParentAutoLayout(node)) {
+    if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
+      if (isAutoLayout(node)) {
+        css += cssLayoutAlign(node)
+      } else {
+        css += cssLayoutAlign(node)
+        css += cssSize(node)
+        css += cssPosition('relative')
+      }
+      
+      css += cssFrameStyle(node)
     } else {
-      css += cssPosition('absolute')
-    }
-
-    // get specific styles
-    if (node.type === 'TEXT') {
-      css += cssTextStyle(node)
+      css += cssLayoutAlign(node)
+      css += cssSize(node)
     }
   }
-
+  
   // color except for svg node and instance node
   if (!isSvgNode(node) && !isInstanceNode(node)) {
     css += cssColorStyle(node)
   }
+
   css += cssOpacity(node)
-  // css += cssDebugBorder(node)
-  css += '`\n'
+
+
+
+
+  const nodeName = clearName(node.name)
+  
+  if (css.length > 0) {
+    if (isHead && compName) {
+      css = `const Container = styled(${compName})` + "`\n" + css
+    } else if (compName !== nodeName) {
+      css = `const ${nodeName} = styled(${compName})` + "`\n" + css
+    }
+    else if (isButton(nodeName)) {
+      const buttonType = getButtonType(nodeName)
+      css = `const ${nodeName} = styled(${buttonType})` + "`\n" + css
+    } else if (isInstanceNode(node)) {
+      if (compName) {
+        css = `const ${nodeName} = styled(${compName})` + "`\n" + css
+      } else {
+        css = `const ${nodeName} = styled(${nodeName}Component)` + "`\n" + css
+      }
+    } else {
+      css = `const ${nodeName} = styled.${getTag(node)}` + "`\n" + css
+    }
+    css += '`\n'
+  }
+  
   return css
 }
 

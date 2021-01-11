@@ -20,6 +20,10 @@ export function isParentAutoLayout(node: SceneNode): boolean {
   return false
 }
 
+export function isTextNode(node: SceneNode): boolean {
+  return node.type === 'TEXT'
+}
+
 export function isImageNode(node: SceneNode): boolean {
   let image = false
   if (node.type === 'RECTANGLE') {

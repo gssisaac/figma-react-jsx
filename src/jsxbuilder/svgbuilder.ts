@@ -6,15 +6,16 @@ import { isSvgNode } from '../identification'
 // let Svgs = ''
 // if a frame has vector children, assuming that is svg
 
-export function buildSVG(refer: Refer, node: SceneNode): boolean {
+export function buildSVG(refer: Refer, node: SceneNode): [number, number] {
   if (node.name in refer.allSvgs) {
-    return true
+    return [node.width, node.height]
   }
   const nodeName = clearName(node.name)
+  console.log({nodeName})
   // check SVG
   if ((node.type === 'FRAME' || node.type === 'COMPONENT' || node.type === 'INSTANCE') && isSvgNode(node)) {
     let svg = ''
-    svg += `const SVG${nodeName} = <svg width='${node.width}' height='${node.height}' viewBox='0 0 ${node.width} ${node.width}' fill='none' xmlns='http://www.w3.org/2000/svg'>\n`
+    svg += `const SVG${nodeName} = <svg width='100%' height='100%' viewBox='0 0 ${node.width} ${node.width}' fill='none' xmlns='http://www.w3.org/2000/svg'>\n`
     node.children.forEach(vector => {
       if (vector.type === 'VECTOR') {
         const fillColor = getFillColor(vector)
@@ -26,7 +27,7 @@ export function buildSVG(refer: Refer, node: SceneNode): boolean {
     svg += '</svg>\n'
     refer.allSvgs[node.name] = svg
     // Svgs += svg
-    return true
+    return [node.width, node.height]
   }
-  return false
+  return null
 }
