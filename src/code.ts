@@ -43,6 +43,14 @@ figma.ui.onmessage = msg => {
           text: `Export`,
           data: Buffer.from(data).toString('base64'),
         })
+        messages.push({
+          type: 'add-component',
+          name: layerName,
+          filename: layerName + '.tsx',
+          raw_data: data,
+          text: `Export`,
+          data: data
+        })
       }
     })
 

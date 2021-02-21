@@ -4,6 +4,7 @@ export function isAutoLayout(node: SceneNode): boolean {
     return false
   }
   if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
+    console.log({ node: node })
     if (node.layoutMode === 'HORIZONTAL' || node.layoutMode === 'VERTICAL') {
       return true
     }

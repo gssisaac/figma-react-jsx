@@ -208,7 +208,7 @@ export function cssPosition(position: string): string {
   return `  position: ${position};\n`;  
 }
 
-export function cssAutoLayout(node: SceneNode): string {
+export function cssAutoLayout(node): string {
   let css = ''
   if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
     // Auto layout
@@ -217,6 +217,34 @@ export function cssAutoLayout(node: SceneNode): string {
       css += `  flex-direction: row;\n`
     } else if (node.layoutMode === 'VERTICAL') {
       css += `  flex-direction: column;\n`
+    }
+
+    // justify-content
+    switch (node.primaryAxisAlignItems) {
+      case 'SPACE_BETWEEN':
+        css += `  justify-content: space-between;\n`
+        break
+      case 'MIN':
+        css += `  justify-content: flex-start;\n`
+        break
+      case 'MAX':
+        css += `  justify-content: flex-end;\n`
+        break
+      case 'CENTER':
+        css += `  justify-content: center;\n`
+        break
+    }
+
+    switch (node.counterAxisAlignItems) {
+      case 'MIN':
+        css += `  align-items: flex-start;\n`
+        break
+      case 'MAX':
+        css += `  align-items: flex-end;\n`
+        break
+      case 'CENTER':
+        css += `  align-items: center;\n`
+        break
     }
   }
   return css

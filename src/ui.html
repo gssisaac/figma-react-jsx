@@ -2,10 +2,21 @@
     <div id="export-xml-zip"></div>
     <p>Selected layers</p>
     <div id="export-xml-layers"></div>
-    <button id="export-xml-cancel">Close export</button>
+    <!-- <button id="export-xml-cancel">Close export</button> -->
+    <br/>
+    <div id='sourcecodes'>
+
+    </div>
+    <!-- <textarea id="sourcecode" name="code" rows="4" cols="50">
+      code...
+    </textarea> -->
 </div>
 
 <style>
+    #sourcecodes {
+      width: 400px;
+      min-height: 400px;
+    }
     #export-xml-plugin {
         text-align: center;
         padding: 20px;
@@ -52,6 +63,7 @@
     #export-xml-layers a {
         font-family:Arial, Helvetica, sans-serif;
         font-size: 12px;
+        height: 12px;
         min-width: 60px;
         border-radius: 5px;
         border: solid 1px gray;
@@ -70,6 +82,7 @@
   const layers = document.getElementById('export-xml-layers')
 
   parent.postMessage({ pluginMessage: { type: 'initialized' } }, '*')
+
 
   function copyToClipboard() {
     var copyText = document.createElement("input")
@@ -96,6 +109,31 @@
       link.setAttribute('download', message.filename)
       link.setAttribute('href', 'data:application/xml;base64,' + message.data)
       layer.appendChild(link)
+    } else if (message.type === 'add-component') {
+      const container = document.getElementById('sourcecodes')
+      // code
+      const sourcecode = document.createElement('textarea')
+      sourcecode.setAttribute('style', 'width: 100%; min-height: 400px;')
+      sourcecode.innerHTML = message.data
+      
+      // title
+      const title = document.createElement('p')
+      title.innerText = message.filename
+
+      // button
+      const button = document.createElement('a')
+      button.innerText = 'Copy Clipboard'
+      button.onclick = () => {
+        sourcecode.select()
+        sourcecode.setSelectionRange(0, 9999999)
+        document.execCommand("copy")
+        sourcecode.getSelection().removeAllRange()
+      }
+
+      //add
+      container.appendChild(title)
+      container.appendChild(button)
+      container.appendChild(sourcecode)
     } else if (message.type === 'add-zip') {
       const zipLink = document.createElement('a')
       zipLink.innerText = message.text

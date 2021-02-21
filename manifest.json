@@ -1,5 +1,5 @@
 {
-  "name": "Figma-react-hooks-export",
+  "name": "Figma-react-hooks-export-plugin",
   "id": "835477638473350025",
   "api": "1.0.0",
   "main": "dist/code.js",
