@@ -2,6 +2,7 @@ import { isInstanceNode, isSvgNode } from '../identification'
 
 import { Refer } from './types'
 import { buildSVG } from './svgbuilder'
+import { clearName } from '../utils'
 import { parseNodeName } from './nodeNameParser'
 
 function levelTab(level: number) {
@@ -90,10 +91,10 @@ export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps
   const tab = levelTab(level)
   let text = ''
 
-  // const nodeName = clearName(node.name)
-  const { nodeName } = parseNodeName(node.name)
+  let { nodeName } = parseNodeName(node.name)
   const { prop, onClick } = extractPropsAll(refer, node)
   // const prop = extractProps(params)
+  nodeName = clearName(nodeName)
 
   if (buildSVG(refer, node)) {
     // text += `${tab}<${nodeName} src={SVG_${nodeName}}/>\n`

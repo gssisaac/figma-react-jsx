@@ -143,19 +143,19 @@ export function cssSize(node: SceneNode): string {
 export function cssAutoLayoutItemSpacing(node): string{
   let css = ''
   // except for last child
-  const children = node.parent.children
-  const lastOne = (children.length > 0 && children[children.length-1] === node)
-  // Auto layout: item spacing to margin
-  if (!lastOne) {
-    if (node.parent.itemSpacing > 0) {
-      if (node.parent.layoutMode === 'HORIZONTAL') {
-        css += `  margin-right: ${node.parent.itemSpacing}px;\n`
-      }
-      if (node.parent.layoutMode === 'VERTICAL') {
-        css += `  margin-bottom: ${node.parent.itemSpacing}px;\n`
-      }
-    }
-  }
+  // const children = node.parent.children
+  // const lastOne = (children.length > 0 && children[children.length-1] === node)
+  // // Auto layout: item spacing to margin
+  // if (!lastOne) {
+  //   if (node.parent.itemSpacing > 0) {
+  //     if (node.parent.layoutMode === 'HORIZONTAL') {
+  //       css += `  margin-right: ${node.parent.itemSpacing}px;\n`
+  //     }
+  //     if (node.parent.layoutMode === 'VERTICAL') {
+  //       css += `  margin-bottom: ${node.parent.itemSpacing}px;\n`
+  //     }
+  //   }
+  // }
 
   // console.log(`node: ${node.name}, layout:${node.layoutAlign}`)
 
@@ -164,6 +164,7 @@ export function cssAutoLayoutItemSpacing(node): string{
     CENTER: 'center',
     MIN: 'flex-start',
     MAX: 'flex-end',
+    STRETCH: 'stretch',
   }
   if (node.layoutAlign in LAYOUTALIGN) {
     css += `  align-self: ${LAYOUTALIGN[node.layoutAlign]};\n`
@@ -245,6 +246,10 @@ export function cssAutoLayout(node): string {
       case 'CENTER':
         css += `  align-items: center;\n`
         break
+    }
+
+    if (node.itemSpacing > 0) {
+      css += `  gap: ${node.itemSpacing}px\n`
     }
   }
   return css

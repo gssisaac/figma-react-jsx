@@ -34,13 +34,23 @@ export function getFillColor(node: any) {
   return color
 }
 
+const capitalize = (s) => {
+  if (typeof s !== 'string') return ''
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
 export function clearName(str: string): string {
   const arr = str.split('$')
+  let name = ''
   if (arr.length === 0) {
-    return str.replace(/\s/g, '').trim()
+    name = str.replace(/\s/g, '').trim()
   } else {
-    return arr[0].replace(/\s/g, '').trim()
+    name = arr[0].replace(/\s/g, '').trim()
   }
+
+  // to upper case
+  name = name.replace(/-([a-z])|:([a-z])/g, function (g) { return g[1].toUpperCase(); })
+  return capitalize(name)
 }
 
 export function isContainer(node: SceneNode) {
