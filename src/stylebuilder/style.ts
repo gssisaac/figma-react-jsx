@@ -129,14 +129,18 @@ export function cssSize(node: SceneNode): string {
   let css = ''
 
   let needWidth = true
-  if (node.type === 'TEXT' && isParentAutoLayout(node)) {
-    // by default do not set width for text, only parent is auto layout
-    needWidth = false
+  // if (node.type === 'TEXT' && isParentAutoLayout(node)) {
+  //   // by default do not set width for text, only parent is auto layout
+  //   needWidth = false
+  // }
+  if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
+    if (node.primaryAxisSizingMode === 'FIXED') {
+      css += `  width: ${node.width}px;\n`
+    }
+    if (node.counterAxisSizingMode === 'FIXED') {
+      css += `  height: ${node.height}px;\n`
+    }
   }
-  if (needWidth) {
-    css += `  width: ${node.width}px;\n`
-  }
-  css += `  height: ${node.height}px;\n`
   return css
 }
 
@@ -209,7 +213,7 @@ export function cssPosition(position: string): string {
   return `  position: ${position};\n`;  
 }
 
-export function cssAutoLayout(node): string {
+export function cssAutoLayout(node: SceneNode): string {
   let css = ''
   if (node.type === 'FRAME' || node.type === 'INSTANCE' || node.type === 'COMPONENT') {
     // Auto layout
