@@ -15,11 +15,11 @@ export function buildStyledComponent(node: SceneNode, isHead: boolean): string {
   const nodeName = clearName(node.name)
   if (isButton(nodeName)) {
     const buttonType = getButtonType(nodeName)
-    css += `const ${nodeName} = styled(${buttonType})` + "`\n"
+    css += `const ${nodeName}Container = styled(${buttonType})` + "`\n"
   } else if (isInstanceNode(node)) {
-    css += `const ${nodeName} = styled(${nodeName}Component)` + "`\n"
+    css += `const ${nodeName}Container = styled(${nodeName})` + "`\n"
   } else {
-    css += `const ${nodeName} = styled.${getTag(node)}` + "`\n"
+    css += `const ${nodeName}Container = styled.${getTag(node)}` + "`\n"
   }
 
   // if head, we set size

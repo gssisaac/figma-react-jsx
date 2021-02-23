@@ -17,7 +17,7 @@ export function exportReactHooksComponent(head): string {
   searchAllContainers(allContainers, head)
   // console.log({ allContainers })
 
-  const text = buildJsx(refer, head, 2, ' {...props}')
+  const text = buildJsx(refer, head, true, 2, ' {...props}')
 
   let styledComponents = buildStyledComponent(head, true)
   
@@ -50,13 +50,13 @@ type Props = {
   className?: string
 ${propsText}}
 
-function ${clearName(head.name)}Component(props: Props) {
+function ${clearName(head.name)}(props: Props) {
 ${funcsText}  return (
 ${text}  )
 }
 
 /* Styled components */
-${styledComponents}export default ${clearName(head.name)}Component
+${styledComponents}export default ${clearName(head.name)}
 `
   totalText += jsx + '\n'
 

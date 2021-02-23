@@ -1,12 +1,12 @@
 <div id="export-xml-plugin">
-    <div id="export-xml-zip"></div>
-    <p>Selected layers</p>
-    <div id="export-xml-layers"></div>
-    <!-- <button id="export-xml-cancel">Close export</button> -->
-    <br/>
     <div id='sourcecodes'>
-
     </div>
+    <br/>
+    <p>Export files as file</p>
+    <div id="export-xml-layers"></div>
+    <br/>
+    <div id="export-xml-zip"></div>
+    <!-- <button id="export-xml-cancel">Close export</button> -->
     <!-- <textarea id="sourcecode" name="code" rows="4" cols="50">
       code...
     </textarea> -->
@@ -99,8 +99,8 @@
       layer.setAttribute('class', 'layer')
       layers.appendChild(layer)
 
-      const label = document.createElement('div')
-      label.innerText = message.name
+      const label = document.createElement('p')
+      label.innerText = message.filename
       label.setAttribute('class', 'label')
       layer.appendChild(label)
 
@@ -121,8 +121,8 @@
       title.innerText = message.filename
 
       // button
-      const button = document.createElement('a')
-      button.innerText = 'Copy Clipboard'
+      const button = document.createElement('button')
+      button.innerText = 'Copy'
       button.onclick = () => {
         sourcecode.select()
         sourcecode.setSelectionRange(0, 9999999)

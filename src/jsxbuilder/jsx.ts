@@ -87,7 +87,7 @@ function extractPropsAll(refer: Refer, node: SceneNode): ExtractProps {
 export function checkError(node: SceneNode) {
 }
 
-export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps: string) {
+export function buildJsx(refer: Refer, node: SceneNode, isHead: boolean, level: number, baseProps: string) {
   const tab = levelTab(level)
   let text = ''
 
@@ -95,6 +95,10 @@ export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps
   const { prop, onClick } = extractPropsAll(refer, node)
   // const prop = extractProps(params)
   nodeName = clearName(nodeName)
+
+  if (isHead) {
+    nodeName += 'Container'
+  }
 
   if (buildSVG(refer, node)) {
     // text += `${tab}<${nodeName} src={SVG_${nodeName}}/>\n`
@@ -106,7 +110,7 @@ export function buildJsx(refer: Refer, node: SceneNode, level: number, baseProps
   if ((node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'COMPONENT') && node.children.length > 0) {
     text += `${tab}<${nodeName}${baseProps}${onClick}>\n`
     node.children.forEach(child => {
-      text += buildJsx(refer, child, level + 1, '')
+      text += buildJsx(refer, child, false, level + 1, '')
     })
     text += `${tab}</${nodeName}>\n`
   } else if (node.type === 'TEXT') {
